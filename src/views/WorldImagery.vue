@@ -1,28 +1,69 @@
 <script setup>
-import { useLayout } from '@/layout/composables/layout';
-import { ProductService } from '@/service/ProductService';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, computed } from "vue";
+import MapView from "@arcgis/core/views/MapView";
+import Basemap from "@arcgis/core/Basemap";
+import WebMap from "@arcgis/core/WebMap";
+import esriConfig from "@arcgis/core/config";
+import TileLayer from "@arcgis/core/layers/TileLayer";
+import { CountryService } from "@/service/CountryService";
 
-const { getPrimary, getSurface, isDarkTheme } = useLayout();
+// Reference for the map container
+const mapViewDiv = ref(null);
 
+esriConfig.apiKey = "CuT30OwJRnb1Fuv9";
+esriConfig.portalUrl = "https://vertex.gamuda.com.my/portal-au";
 
+const countries = CountryService.getData();
+
+// Extract and Compute Country Name
+const countryCode = computed(() =>
+    esriConfig.portalUrl.split("-").pop().toUpperCase(),
+);
+const countryName = computed(() => {
+    const country = countries.find((c) => c.code === countryCode.value);
+    return country ? country.name : "Unknown";
+});
+
+const imageryView = () => {
+    try {
+        const imageryMap = new Basemap({
+            baseLayers: [
+                new TileLayer({
+                    url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
+                }),
+            ],
+            title: "World Imagery",
+            id: "world-imagery",
+        });
+
+        const webmap = new WebMap({
+            portalItem: {
+                id: "4a260e461521476aaced9ed5ccd5a84b",
+            },
+            basemap: imageryMap,
+        });
+
+        let view = new MapView({
+            container: mapViewDiv.value, // Assign the DOM element directly
+            map: webmap,
+        });
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+onMounted(() => {
+    imageryView();
+});
 </script>
 
 <template>
-    <div class="grid grid-cols-12 gap-8">
-        <div class="col-span-12 lg:col-span-6 xl:col-span-3">
+    <div class="grid grid-cols-12">
+        <div class="col-span-12">
             <div class="card mb-0">
-                <div class="flex justify-between mb-4">
-                    <div>
-                        <span class="block text-muted-color font-medium mb-4">Orders</span>
-                        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">152</div>
-                    </div>
-                    <div class="flex items-center justify-center bg-blue-100 dark:bg-blue-400/10 rounded-border" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-shopping-cart text-blue-500 !text-xl"></i>
-                    </div>
-                </div>
-                <span class="text-primary font-medium">24 new </span>
-                <span class="text-muted-color">since last visit</span>
+                <!-- Map container -->
+                <h1 class="text-2xl mb-3 font-semibold">{{ countryName }}</h1>
+                <div ref="mapViewDiv" style="height: 500px; width: 100%"></div>
             </div>
         </div>
     </div>

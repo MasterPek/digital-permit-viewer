@@ -16,7 +16,7 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
                     <img src="/demo/images/gamuda.png" class="rounded-xl" alt="" height="35px" width="35px">
                 </div>
 
-                <span>Digital Permit Viewer</span>
+                <span class="text-lg sm:text-base md:text-xl">Digital Permit Viewer</span>
             </router-link>
         </div>
 
@@ -29,3 +29,6 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
         </div>
     </div>
 </template>
+
+<style scoped>
+</style>

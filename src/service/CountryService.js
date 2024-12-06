@@ -106,7 +106,6 @@ export const CountryService = {
             { name: 'Iraq', code: 'IQ' },
             { name: 'Ireland', code: 'IE' },
             { name: 'Isle of Man', code: 'IM' },
-            { name: 'Israel', code: 'IL' },
             { name: 'Italy', code: 'IT' },
             { name: 'Jamaica', code: 'JM' },
             { name: 'Japan', code: 'JP' },
