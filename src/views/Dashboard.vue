@@ -8,7 +8,7 @@ import VectorTileLayer from "@arcgis/core/layers/VectorTileLayer";
 import TileLayer from "@arcgis/core/layers/TileLayer";
 import { CountryService } from "@/service/CountryService";
 import { useToast } from "primevue/usetoast";
-
+// TODO fetch layers from arcgis
 // References
 const mapViewDiv = ref(null);
 const toast = useToast();
