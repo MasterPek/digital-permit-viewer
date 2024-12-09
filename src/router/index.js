@@ -10,33 +10,33 @@ const router = createRouter({
             children: [
                 {
                     path: '/',
-                    name: 'openstreetmaps',
+                    name: 'street-map',
                     component: () => import('@/views/Dashboard.vue')
                 },
                 {
-                    path: '/world-imagery',
-                    name: 'world-imagery',
+                    path: '/imagery-map',
+                    name: 'imagery-map',
                     component: () => import('@/views/WorldImagery.vue')
                 },
                 {
-                    path: '/uikit/formlayout',
-                    name: 'formlayout',
-                    component: () => import('@/views/uikit/FormLayout.vue')
+                    path: '/layer/survey',
+                    name: 'survey-layer',
+                    component: () => import('@/views/pages/layers/Survey.vue')
                 },
                 {
-                    path: '/uikit/input',
-                    name: 'input',
-                    component: () => import('@/views/uikit/InputDoc.vue')
+                    path: '/layer/design',
+                    name: 'design-layer',
+                    component: () => import('@/views/pages/layers/Design.vue')
                 },
                 {
-                    path: '/uikit/button',
-                    name: 'button',
-                    component: () => import('@/views/uikit/ButtonDoc.vue')
+                    path: '/layer/environment',
+                    name: 'environment-layer',
+                    component: () => import('@/views/pages/layers/Environment.vue')
                 },
                 {
-                    path: '/uikit/table',
-                    name: 'table',
-                    component: () => import('@/views/uikit/TableDoc.vue')
+                    path: '/layer/permit-area',
+                    name: 'permitarea-layer',
+                    component: () => import('@/views/pages/layers/PermitArea.vue')
                 },
                 {
                     path: '/uikit/list',

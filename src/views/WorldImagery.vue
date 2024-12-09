@@ -1,70 +1,59 @@
 <script setup>
-import { onMounted, ref, computed } from "vue";
+import { ref, onMounted, watch } from "vue";
 import MapView from "@arcgis/core/views/MapView";
-import Basemap from "@arcgis/core/Basemap";
 import WebMap from "@arcgis/core/WebMap";
 import esriConfig from "@arcgis/core/config";
-import TileLayer from "@arcgis/core/layers/TileLayer";
-import { CountryService } from "@/service/CountryService";
+import { useBasemapStore } from "@/store/basemapStore";
+import { streetMap, imageryMap } from "@/utils/basemap";
 
-// Reference for the map container
+const basemapStore = useBasemapStore();
 const mapViewDiv = ref(null);
+let view;
 
-esriConfig.apiKey = "CuT30OwJRnb1Fuv9";
+esriConfig.apiKey = "YOUR_API_KEY"; // Replace with your actual API key
 esriConfig.portalUrl = "https://vertex.gamuda.com.my/portal-au";
 
-const countries = CountryService.getData();
+// Initialize the MapView
+const initializeMapView = () => {
+  const webmap = new WebMap({
+    portalItem: { id: "4a260e461521476aaced9ed5ccd5a84b" }, // Replace with your actual WebMap ID
+    basemap: basemapStore.currentBasemapId === "osm" ? streetMap : imageryMap,
+  });
 
-// Extract and Compute Country Name
-const countryCode = computed(() =>
-    esriConfig.portalUrl.split("-").pop().toUpperCase(),
-);
-const countryName = computed(() => {
-    const country = countries.find((c) => c.code === countryCode.value);
-    return country ? country.name : "Unknown";
-});
+  view = new MapView({
+    container: mapViewDiv.value,
+    map: webmap,
+  });
 
-const imageryView = () => {
-    try {
-        const imageryMap = new Basemap({
-            baseLayers: [
-                new TileLayer({
-                    url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
-                }),
-            ],
-            title: "World Imagery",
-            id: "world-imagery",
-        });
-
-        const webmap = new WebMap({
-            portalItem: {
-                id: "4a260e461521476aaced9ed5ccd5a84b",
-            },
-            basemap: imageryMap,
-        });
-
-        let view = new MapView({
-            container: mapViewDiv.value, // Assign the DOM element directly
-            map: webmap,
-        });
-    } catch (error) {
-        console.error(error);
-    }
+  view.when(
+    () => console.log("WorldImagery loaded successfully"),
+    (error) => console.error("Error loading WorldImagery:", error)
+  );
 };
 
-onMounted(() => {
-    imageryView();
-});
+// Watch for Basemap Changes
+watch(
+  () => basemapStore.currentBasemapId,
+  (newBasemapId) => {
+    if (view && view.map) {
+      view.map.basemap = newBasemapId === "osm" ? streetMap : imageryMap;
+    }
+  }
+);
+
+onMounted(initializeMapView);
 </script>
 
 <template>
-    <div class="grid grid-cols-12">
-        <div class="col-span-12">
-            <div class="card mb-0">
-                <!-- Map container -->
-                <h1 class="text-2xl mb-3 font-semibold">{{ countryName }}</h1>
-                <div ref="mapViewDiv" style="height: 500px; width: 100%"></div>
-            </div>
-        </div>
+  <div class="grid grid-cols-12">
+    <div class="col-span-12">
+      <div class="card mb-0">
+        <h1 class="text-2xl font-semibold">World Imagery View</h1>
+        <div ref="mapViewDiv" style="height: 500px; width: 100%"></div>
+      </div>
     </div>
+  </div>
 </template>
+
+<style scoped>
+</style>

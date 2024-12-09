@@ -10,10 +10,12 @@ import ToastService from 'primevue/toastservice';
 
 import '@/assets/styles.scss';
 import '@/assets/tailwind.css';
+import { createPinia } from 'pinia';
 
 const app = createApp(App);
 
 app.use(router);
+app.use(createPinia());
 
 const MyPreset = definePreset(Aura, {
     semantic: {
