@@ -39,9 +39,9 @@ const router = createRouter({
                     component: () => import('@/views/pages/layers/PermitArea.vue')
                 },
                 {
-                    path: '/uikit/list',
-                    name: 'list',
-                    component: () => import('@/views/uikit/ListDoc.vue')
+                    path: '/drag',
+                    name: 'drag',
+                    component: () => import('@/views/pages/Drag.vue')
                 },
                 {
                     path: '/uikit/tree',

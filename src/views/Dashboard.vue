@@ -7,9 +7,6 @@ import { CountryService } from "@/service/CountryService";
 import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
-import Query from "@arcgis/core/rest/support/Query";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import IdentityManager from "@arcgis/core/identity/IdentityManager";
 
 const basemapStore = useBasemapStore();
 
@@ -22,7 +19,7 @@ let view;
 let webmap;
 
 const treeNodes = ref([]);
-const selectedNodes = ref(null);
+const selectedNodes = ref({});
 
 // Country Info
 const countries = CountryService.getData();
@@ -34,43 +31,37 @@ const countryName = computed(() => {
     return country ? country.name : "Unknown";
 });
 
-// Transform layer data to TreeSelect compatible format
-const transformLayerToTreeNode = (layerData) => {
-    const node = {
-        key: layerData.id,
-        label: layerData.title,
-        selectable: true,
-        children: layerData.items.length > 0 
-            ? layerData.items.map(item => transformLayerToTreeNode(item))
-            : undefined,
-        data: {
-            visible: layerData.visible,
-            type: layerData.type,
-            url: layerData.url
-        }
-    };
-    return node;
-};
+const transformLayerToTreeNode = (layerData, checkedState = {}) => {
+    // Recursively transform layer data to tree nodes
+    const transformLayer = (layer) => {
+        const children = Array.isArray(layer.items)
+            ? layer.items.map(transformLayer)
+            : [];
 
-// Collect all visible layer keys recursively
-const collectVisibleLayerKeys = (nodes) => {
-    const visibleKeys = [];
-    
-    const traverse = (node) => {
-        // If the node itself is visible, add its key
-        if (node.data && node.data.visible) {
-            visibleKeys.push(node.key);
-        }
-        
-        // Recursively check children
-        if (node.children) {
-            node.children.forEach(traverse);
-        }
+        const checked = checkedState[layer.id]?.checked || layer.visible;
+        const partialChecked = checkedState[layer.id]?.partialChecked || 
+            (children.length > 0 && 
+             children.some(child => child.checked || child.partialChecked) && 
+             !children.every(child => child.checked));
+
+        return {
+            key: layer.id,
+            label: layer.title,
+            selectable: true,
+            checked: checked,
+            partialChecked: partialChecked,
+            children: children.length > 0 ? children : undefined,
+            data: {
+                visible: layer.visible,
+                type: layer.type,
+                url: layer.url,
+            },
+        };
     };
 
-    nodes.forEach(traverse);
-    return visibleKeys;
+    return transformLayer(layerData);
 };
+
 
 // Basemap switcher
 const initializeMapView = () => {
@@ -134,18 +125,35 @@ const fetchAllLayers = async () => {
             return layerData;
         });
 
-        // Transform layer data to TreeSelect nodes
-        treeNodes.value = operationalLayerData.map(transformLayerToTreeNode);
+        // Transform layer data to TreeSelect nodes with checked state
+        treeNodes.value = operationalLayerData.map((layer) => 
+            transformLayerToTreeNode(layer, selectedNodes.value)
+        );
 
-        // Prepare for initial selection
-        await nextTick(); // Ensure DOM is updated
+        const updateSelectedNodes = (layer) => {
+            if (layer.visible) {
+                selectedNodes.value[layer.id] = { 
+                    checked: true, 
+                    partialChecked: false 
+                };
+            } else {
+                selectedNodes.value[layer.id] = { 
+                    checked: false, 
+                    partialChecked: layer.items && layer.items.length > 0 
+                };
+            }
+            
+            // Recursively update child layers
+            if (layer.items) {
+                layer.items.forEach(updateSelectedNodes);
+            }
+        };
 
-        // Pre-select visible layers
-        const initialSelectedKeys = collectVisibleLayerKeys(treeNodes.value);
-        selectedNodes.value = initialSelectedKeys;
+        operationalLayerData.forEach(updateSelectedNodes);
 
-        console.log("Tree Nodes:", treeNodes.value);
-        console.log("Selected Nodes:", selectedNodes.value);
+        console.log("selectedNodes:", selectedNodes.value);
+        console.log("treeNodes:", treeNodes.value);
+
     } catch (error) {
         console.error("Error fetching layers:", error);
     }
@@ -153,17 +161,23 @@ const fetchAllLayers = async () => {
 
 // Watch for selected nodes and update layer visibility
 watch(selectedNodes, (newSelectedNodes) => {
-  console.log("Selected Nodes:", newSelectedNodes);
-  
-    if (view && view.map) {
-        // Ensure newSelectedNodes is an array
-        const selectedNodeKeys = Array.isArray(newSelectedNodes) 
-            ? newSelectedNodes 
-            : [newSelectedNodes].filter(Boolean);
+    // Ensure it's always an array
+    const selectedNodeKeys = Array.isArray(newSelectedNodes)
+        ? newSelectedNodes
+        : [newSelectedNodes].filter(Boolean);
 
-        // Iterate through layers to update visibility
-        view.map.layers.forEach(layer => {
-            layer.visible = selectedNodeKeys.includes(layer.id);
+    console.log("Selection Changed:", { newSelectedNodes });
+
+    if (view && view.map) {
+        view.map.layers.forEach((layer) => {
+            const isVisible = selectedNodeKeys.includes(layer.id);
+
+            if (layer.visible !== isVisible) {
+                console.log(
+                    `Layer ${layer.id} visibility changed to: ${isVisible}`
+                );
+            }
+            layer.visible = isVisible;
         });
     }
 });
@@ -220,25 +234,13 @@ onMounted(initializeMapView);
         <div class="col-span-12">
             <div class="card mb-0">
                 <div class="mb-3 flex items-center justify-between">
-                    <TreeSelect
-                        v-model="selectedNodes"
-                        :options="treeNodes"
-                        selectionMode="checkbox"
-                        placeholder="Select Layers"
-                        class="md:w-80 w-full"
-                        display="chip"
-                    />
+                    <TreeSelect v-model="selectedNodes" :options="treeNodes" selectionMode="checkbox"
+                        placeholder="Select Layers" class="md:w-80 w-full" display="chip" />
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                 </div>
-                <div
-                    ref="mapViewDiv"
-                    style="height: 500px; width: 100%; position: relative"
-                >
-                    <SpeedDial
-                        :model="speedDialItems"
-                        direction="up"
-                        style="position: absolute; bottom: 10px; right: 10px"
-                    />
+                <div ref="mapViewDiv" style="height: 500px; width: 100%; position: relative">
+                    <SpeedDial :model="speedDialItems" direction="up"
+                        style="position: absolute; bottom: 10px; right: 10px" />
                 </div>
             </div>
         </div>
