@@ -39,10 +39,10 @@ const transformLayerToTreeNode = (layerData, checkedState = {}) => {
             : [];
 
         const checked = checkedState[layer.id]?.checked || layer.visible;
-        const partialChecked = checkedState[layer.id]?.partialChecked || 
-            (children.length > 0 && 
-             children.some(child => child.checked || child.partialChecked) && 
-             !children.every(child => child.checked));
+        const partialChecked = checkedState[layer.id]?.partialChecked ||
+            (children.length > 0 &&
+                children.some(child => child.checked || child.partialChecked) &&
+                !children.every(child => child.checked));
 
         return {
             key: layer.id,
@@ -91,6 +91,8 @@ const initializeMapView = () => {
 const fetchAllLayers = async () => {
     try {
         const operationalLayers = webmap.layers.toArray();
+        console.log("Operational Layers:", operationalLayers);
+
 
         const operationalLayerData = operationalLayers.map((layer) => {
             const layerData = {
@@ -126,23 +128,17 @@ const fetchAllLayers = async () => {
         });
 
         // Transform layer data to TreeSelect nodes with checked state
-        treeNodes.value = operationalLayerData.map((layer) => 
+        treeNodes.value = operationalLayerData.map((layer) =>
             transformLayerToTreeNode(layer, selectedNodes.value)
         );
 
         const updateSelectedNodes = (layer) => {
-            if (layer.visible) {
-                selectedNodes.value[layer.id] = { 
-                    checked: true, 
-                    partialChecked: false 
-                };
-            } else {
-                selectedNodes.value[layer.id] = { 
-                    checked: false, 
-                    partialChecked: layer.items && layer.items.length > 0 
-                };
-            }
-            
+            // Update the checked state for the current layer
+            selectedNodes.value[layer.id] = {
+                checked: layer.visible,
+                partialChecked: false
+            };
+
             // Recursively update child layers
             if (layer.items) {
                 layer.items.forEach(updateSelectedNodes);
@@ -159,28 +155,37 @@ const fetchAllLayers = async () => {
     }
 };
 
-// Watch for selected nodes and update layer visibility
-watch(selectedNodes, (newSelectedNodes) => {
-    // Ensure it's always an array
-    const selectedNodeKeys = Array.isArray(newSelectedNodes)
-        ? newSelectedNodes
-        : [newSelectedNodes].filter(Boolean);
+watch(
+    selectedNodes,
+    (newSelectedNodes) => {
+        console.log("Selection Changed:", newSelectedNodes);
 
-    console.log("Selection Changed:", { newSelectedNodes });
+        // Update layer visibility based on selected nodes
+        if (view && view.map) {
+            view.map.layers.forEach((layer) => {
+                const layerSelection = newSelectedNodes[layer.id];
+                const isVisible = layerSelection ? layerSelection.checked : false;
 
-    if (view && view.map) {
-        view.map.layers.forEach((layer) => {
-            const isVisible = selectedNodeKeys.includes(layer.id);
+                // Update the layer's visibility if it has changed
+                if (layer.visible !== isVisible) {
+                    layer.visible = isVisible;
+                    console.log(`Layer ${layer.id} visibility set to: ${isVisible}`);
+                }
 
-            if (layer.visible !== isVisible) {
-                console.log(
-                    `Layer ${layer.id} visibility changed to: ${isVisible}`
-                );
-            }
-            layer.visible = isVisible;
-        });
-    }
-});
+                // If the layer has children, check if any are visible
+                if (layer.items) {
+                    const anyChildVisible = layer.items.some(child => newSelectedNodes[child.id]?.checked);
+                    if (anyChildVisible) {
+                        layer.visible = true; // Ensure parent is visible if any child is visible
+                    } else {
+                        layer.visible = false; // Hide parent if no children are visible
+                    }
+                }
+            });
+        }
+    },
+    { deep: true }
+);
 
 // Basemap change logic
 const getBasemapById = (id) => {
@@ -234,13 +239,16 @@ onMounted(initializeMapView);
         <div class="col-span-12">
             <div class="card mb-0">
                 <div class="mb-3 flex items-center justify-between">
-                    <TreeSelect v-model="selectedNodes" :options="treeNodes" selectionMode="checkbox"
-                        placeholder="Select Layers" class="md:w-80 w-full" display="chip" />
+                    <FloatLabel>
+                        <TreeSelect v-model="selectedNodes" :options="treeNodes" selectionMode="checkbox"
+                            placeholder="Select Layers" inputId="layers_label" class="md:w-80 w-full" display="chip" />
+                        <label for="layers_label">Select Layers</label>
+                    </FloatLabel>
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                 </div>
-                <div ref="mapViewDiv" style="height: 500px; width: 100%; position: relative">
-                    <SpeedDial :model="speedDialItems" direction="up"
-                        style="position: absolute; bottom: 10px; right: 10px" />
+                <div ref="mapViewDiv" style="height: 800px; width: 100%; position: relative">
+                    <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
+                        style="position: absolute; top: 10px; right: 10px" />
                 </div>
             </div>
         </div>

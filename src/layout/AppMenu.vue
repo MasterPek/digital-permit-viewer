@@ -100,31 +100,31 @@ const model = ref([
             },
         ]
     },
-    {
-        label: 'Hierarchy',
-        items: [
-            {
-                label: 'Submenu 1',
-                icon: 'pi pi-fw pi-bookmark',
-                items: [
-                    {
-                        label: 'Submenu 1.1',
-                        icon: 'pi pi-fw pi-bookmark',
-                        items: [
-                            { label: 'Submenu 1.1.1', icon: 'pi pi-fw pi-bookmark' },
-                            { label: 'Submenu 1.1.2', icon: 'pi pi-fw pi-bookmark' },
-                            { label: 'Submenu 1.1.3', icon: 'pi pi-fw pi-bookmark' }
-                        ]
-                    },
-                    {
-                        label: 'Submenu 1.2',
-                        icon: 'pi pi-fw pi-bookmark',
-                        items: [{ label: 'Submenu 1.2.1', icon: 'pi pi-fw pi-bookmark' }]
-                    }
-                ]
-            },
-        ]
-    },
+    // {
+    //     label: 'Hierarchy',
+    //     items: [
+    //         {
+    //             label: 'Submenu 1',
+    //             icon: 'pi pi-fw pi-bookmark',
+    //             items: [
+    //                 {
+    //                     label: 'Submenu 1.1',
+    //                     icon: 'pi pi-fw pi-bookmark',
+    //                     items: [
+    //                         { label: 'Submenu 1.1.1', icon: 'pi pi-fw pi-bookmark' },
+    //                         { label: 'Submenu 1.1.2', icon: 'pi pi-fw pi-bookmark' },
+    //                         { label: 'Submenu 1.1.3', icon: 'pi pi-fw pi-bookmark' }
+    //                     ]
+    //                 },
+    //                 {
+    //                     label: 'Submenu 1.2',
+    //                     icon: 'pi pi-fw pi-bookmark',
+    //                     items: [{ label: 'Submenu 1.2.1', icon: 'pi pi-fw pi-bookmark' }]
+    //                 }
+    //             ]
+    //         },
+    //     ]
+    // },
 ]);
 </script>
 
