@@ -30,7 +30,7 @@ const model = ref([
     {
         label: 'Basemaps',
         items: [
-        { label: 'Street View', icon: 'pi pi-fw pi-map', to: '/', command: () => useBasemapStore.setBasemap(basemapStore.streetMap) },
+        { label: 'Street View', icon: 'pi pi-fw pi-map', to: '/' },
         { label: 'Imagery View', icon: 'pi pi-fw pi-map', to: '/imagery-map', command: () => basemapStore.setBasemap(basemapStore.imageryMap), }
         ],
     },
@@ -41,16 +41,6 @@ const model = ref([
                 label: 'Survey', 
                 icon: 'pi pi-fw pi-id-card', 
                 to: '/layer/survey',
-                items: layers.value.Survey.map(layer => ({
-                label: layer.label,
-                icon: 'pi pi-fw pi-check',
-                component: Checkbox,
-                modelValue: layer.checked,
-                onUpdateModelValue: (value) => {
-                    layer.checked = value;
-                    // Add logic to show/hide layers based on checkbox
-                },
-                })),
             },
             { 
                 label: 'Design', 

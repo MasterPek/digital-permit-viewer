@@ -1,17 +1,13 @@
+<script setup lang="ts">
+
+</script>
 <template>
   <div class="card flex justify-center">
-      <TreeSelect v-model="selectedValue" :options="nodes" selectionMode="checkbox" placeholder="Select Item" class="md:w-80 w-full" />
+    test
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from 'vue';
-import { NodeService } from './service/NodeService';
 
-const nodes = ref(null);
-const selectedValue = ref(null);
+<style scoped>
 
-onMounted(() => {
-  NodeService.getTreeNodes().then((data) => (nodes.value = data));
-});
-</script>
+</style>
