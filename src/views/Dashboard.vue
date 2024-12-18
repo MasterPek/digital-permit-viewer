@@ -2,7 +2,6 @@
 import { ref, onMounted, computed, watch } from "vue";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
-import Popup from "@arcgis/core/widgets/Popup";
 import esriConfig from "@arcgis/core/config";
 import { CountryService } from "@/service/CountryService";
 import { useToast } from "primevue/usetoast";
@@ -39,7 +38,7 @@ const transformLayerToTreeNode = (layerData, checkedState = {}) => {
             : [];
 
         const checked = checkedState[layer.id]?.checked ?? layer.visible;
-        const partialChecked = 
+        const partialChecked =
             children.length > 0 &&
             children.some(child => child.checked || child.partialChecked) &&
             !children.every(child => child.checked);
@@ -67,27 +66,18 @@ const transformLayerToTreeNode = (layerData, checkedState = {}) => {
 // Basemap switcher
 const initializeMapView = () => {
     webmap = new WebMap({
-        portalItem: { id: "4a260e461521476aaced9ed5ccd5a84b" },
+        portalItem: { id: "29c59d6b17f14ee7a2eb9bd88d444fc5" },
         basemap: basemapStore.currentBasemapId,
     });
 
     view = new MapView({
-        popup: new Popup({
-            dockEnabled: true,
-            dockOptions: {
-              position: "top-left",
-              buttonEnabled: false,
-              offset: [20, 20],
-              breakpoint: false
-            },
-          }),
         container: mapViewDiv.value,
         map: webmap,
     });
 
-    // view.on("drag", () => (mapViewDiv.value.style.cursor = "grabbing"));
-    // view.on("drag-end", () => (mapViewDiv.value.style.cursor = "grab"));
-    // view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "grab"));
+    view.on("drag", () => (mapViewDiv.value.style.cursor = "grabbing"));
+    view.on("drag-end", () => (mapViewDiv.value.style.cursor = "grab"));
+    view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "grab"));
 
     view.when(
         () => {
@@ -121,7 +111,7 @@ const fetchAllLayers = async () => {
                         }))
                     };
                 }
-                
+
                 // Handle individual layers
                 return {
                     id: layerOrGroup.id,
@@ -187,7 +177,7 @@ watch(
                     mapLayer.layers.items.forEach(childLayer => {
                         const childSelection = newSelectedNodes[childLayer.id];
                         const isChildVisible = childSelection ? childSelection.checked : false;
-                        
+
                         // Set individual child layer visibility
                         childLayer.visible = isChildVisible;
 
@@ -199,10 +189,10 @@ watch(
 
                     // Update parent layer visibility based on children
                     const parentSelection = newSelectedNodes[mapLayer.id];
-                    const isParentVisible = parentSelection 
+                    const isParentVisible = parentSelection
                         ? (parentSelection.checked || hasVisibleChild)
                         : mapLayer.visible;
-                    
+
                     mapLayer.visible = isParentVisible;
                 } else {
                     // Handle individual layers
@@ -267,8 +257,8 @@ onMounted(initializeMapView);
 </script>
 
 <template>
-    <div class="grid grid-cols-12">
-        <div class="col-span-12">
+    <div class="grid grid-cols-12 relative">
+        <div class="col-span-12 relative w-full h-full">
             <div>
                 <div class="mb-3 flex items-center justify-between">
                     <FloatLabel>
@@ -278,13 +268,19 @@ onMounted(initializeMapView);
                     </FloatLabel>
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                 </div>
-                <div ref="mapViewDiv" style="padding: 0; margin: 0 ; height: 800px; width: 100%; position: relative; ">
+                <div ref="mapViewDiv" style="height: 800px; width: 100%; position: relative; ">
                     <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
                         style="position: absolute; top: 10px; right: 10px" />
+                    <DrawerWebmap v-model="isDrawerOpen">
+                        <!-- Custom drawer content -->
+                        <div>
+                            <Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
+                                style="margin: 0; padding: 0"></Tree>
+                        </div>
+                    </DrawerWebmap>
                 </div>
             </div>
         </div>
     </div>
 </template>
-<style scoped>
-</style>
+<style scoped></style>

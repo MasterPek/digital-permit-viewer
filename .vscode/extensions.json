@@ -1,6 +1,5 @@
 {
   "recommendations": [
-    "Vue.vscode-typescript-vue-plugin",
     "formulahendry.auto-rename-tag",
     "formulahendry.auto-close-tag",
     "mikestead.dotenv",
