@@ -81,17 +81,18 @@ watch(() => props.modelValue, (newValue) => {
 
 <style scoped>
 .web-map-drawer-container {
-  position: absolute;
+  position: absolute; 
   top: 0;
-  left: 0px;
+  left: 0;
   padding: 10px;
   background: #18181b;
-  height: 100%;
-  width: 4%;
+  height: 100%; 
+  width: 60px; 
+  z-index: 10; /* Ensure it appears above the map */
+  cursor: auto;
 }
 
 .drawer-trigger {
-  position: relative;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -101,9 +102,10 @@ watch(() => props.modelValue, (newValue) => {
 .web-map-drawer {
   position: absolute;
   top: 0;
-  left: 57px;
-  width: 300px;
-  height: 100%;
+  left: 60px; /* Align next to the drawer container */
+  width: 40vw; /* Width of the drawer */
+  max-width: 400px;
+  height: 100vh;
   background-color: #18181b;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease-in-out;
@@ -131,6 +133,27 @@ watch(() => props.modelValue, (newValue) => {
 
 .close-button {
   margin-left: auto;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .web-map-drawer-container {
+    width: 60px; /* Keep the width fixed */
+  }
+
+  .web-map-drawer {
+    width: 60vw; /* Adjust the drawer width */
+  }
+}
+
+@media (max-width: 480px) {
+  .web-map-drawer-container {
+    width: 60px; /* Keep the width fixed */
+  }
+
+  .web-map-drawer {
+    width: 80vw; /* Adjust the drawer width */
+  }
 }
 
 /* Transition effects */

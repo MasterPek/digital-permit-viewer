@@ -76,8 +76,8 @@ const initializeMapView = () => {
     });
 
     view.on("drag", () => (mapViewDiv.value.style.cursor = "grabbing"));
-    view.on("drag-end", () => (mapViewDiv.value.style.cursor = "grab"));
-    view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "grab"));
+    view.on("drag-end", () => (mapViewDiv.value.style.cursor = "default"));
+    view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "default"));
 
     view.when(
         () => {
