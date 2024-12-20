@@ -7,6 +7,7 @@ import { CountryService } from "@/service/CountryService";
 import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
+import AuthACC from "./pages/auth/AuthACC.vue";
 
 const basemapStore = useBasemapStore();
 
@@ -272,11 +273,16 @@ onMounted(initializeMapView);
                     <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
                         style="position: absolute; top: 10px; right: 10px" />
                     <DrawerWebmap v-model="isDrawerOpen">
-                        <!-- Custom drawer content -->
-                        <div>
-                            <Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
-                                style="margin: 0; padding: 0"></Tree>
-                        </div>
+                        <template #default="{ drawerTitle }">
+                            <div v-if="drawerTitle === 'Layers'">
+                                <Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
+                                    style="margin: 0; padding: 0" />
+                            </div>
+                            <!-- TODO: ask for arcgis server does it have api-key to access -->
+                            <div class="h-full" v-else-if="drawerTitle === 'Permit'">
+                                <AuthACC />
+                            </div>
+                        </template>
                     </DrawerWebmap>
                 </div>
             </div>

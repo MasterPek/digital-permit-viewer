@@ -14,14 +14,9 @@ const model = ref([
     {
         items: [
             { 
-                label: 'Legend', 
-                icon: 'pi pi-fw pi-mobile', 
-                to: '/layer/environment', 
-            },
-            { 
                 label: 'Survey', 
                 icon: 'pi pi-fw pi-id-card', 
-                to: '/layer/survey',
+                to: '/permit/survey',
             },
         ]
     },
