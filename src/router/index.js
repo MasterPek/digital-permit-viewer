@@ -24,19 +24,19 @@ const router = createRouter({
                     component: () => import('@/views/pages/permit/Survey.vue')
                 },
                 {
-                    path: '/permit/',
+                    path: '/permit',
                     name: 'permit',
                     component: () => import('@/views/pages/permit/Permit.vue')
-                },
-                {
-                    path: '/drag',
-                    name: 'drag',
-                    component: () => import('@/views/pages/Drag.vue')
                 },
                 {
                     path: '/acc/callback',
                     name: 'acc-callback',
                     component: () => import('@/views/pages/auth/CallBackACC.vue')
+                },
+                {
+                    path: '/drag',
+                    name: 'drag',
+                    component: () => import('@/views/pages/Drag.vue')
                 },
                 {
                     path: '/uikit/panel',

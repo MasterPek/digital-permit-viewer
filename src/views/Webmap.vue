@@ -269,7 +269,7 @@ onMounted(initializeMapView);
                     </FloatLabel>
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                 </div>
-                <div ref="mapViewDiv" style="height: 800px; width: 100%; position: relative; ">
+                <div ref="mapViewDiv" style="height: 600px; width: 100%; position: relative; ">
                     <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
                         style="position: absolute; top: 10px; right: 10px" />
                     <DrawerWebmap v-model="isDrawerOpen">
