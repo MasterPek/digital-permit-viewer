@@ -16,6 +16,14 @@
       </button>
     </div>
 
+    <div class="drawer-trigger" @click="toggleDrawer('Permit')">
+      <button v-tooltip="'Permit'">
+        <span class="material-symbols-outlined text-red-400">
+          license
+        </span>
+      </button>
+    </div>
+
     <!-- Drawer Overlay -->
     <Transition name="slide-fade">
       <div v-if="isDrawerOpen" class="web-map-drawer" :class="{ 'drawer-open': isDrawerOpen }">
@@ -28,9 +36,7 @@
 
           <!-- Drawer Body -->
           <div class="drawer-body">
-            <slot>
-              <p>No content provided</p>
-            </slot>
+            <slot :drawer-title="drawerTitle">No content provided</slot>
           </div>
         </div>
       </div>
@@ -62,7 +68,7 @@ const toggleDrawer = (title) => {
   if (!isDrawerOpen.value || drawerTitle.value !== title) {
     isDrawerOpen.value = true;
     drawerTitle.value = title;
-    emit('update:modelValue', isDrawerOpen.value);
+    // emit('update:modelValue', isDrawerOpen.value);
   }
 };
 
@@ -105,16 +111,19 @@ watch(() => props.modelValue, (newValue) => {
   left: 60px; /* Align next to the drawer container */
   width: 40vw; /* Width of the drawer */
   max-width: 400px;
-  height: 100vh;
+  height: 100%;
   background-color: #18181b;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
 }
 
 .drawer-content {
   height: 100%;
   display: flex;
   flex-direction: column;
+  /* background-color: aquamarine; */
 }
 
 .drawer-header {

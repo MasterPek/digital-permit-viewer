@@ -11,7 +11,7 @@ const router = createRouter({
                 {
                     path: '/',
                     name: 'street-map',
-                    component: () => import('@/views/Dashboard.vue')
+                    component: () => import('@/views/Webmap.vue')
                 },
                 {
                     path: '/imagery-map',
@@ -19,24 +19,14 @@ const router = createRouter({
                     component: () => import('@/views/WorldImagery.vue')
                 },
                 {
-                    path: '/layer/survey',
-                    name: 'survey-layer',
-                    component: () => import('@/views/pages/layers/Survey.vue')
+                    path: '/permit/survey',
+                    name: 'survey-permit',
+                    component: () => import('@/views/pages/permit/Survey.vue')
                 },
                 {
-                    path: '/layer/design',
-                    name: 'design-layer',
-                    component: () => import('@/views/pages/layers/Design.vue')
-                },
-                {
-                    path: '/layer/environment',
-                    name: 'environment-layer',
-                    component: () => import('@/views/pages/layers/Environment.vue')
-                },
-                {
-                    path: '/layer/permit-area',
-                    name: 'permitarea-layer',
-                    component: () => import('@/views/pages/layers/PermitArea.vue')
+                    path: '/permit/',
+                    name: 'permit',
+                    component: () => import('@/views/pages/permit/Permit.vue')
                 },
                 {
                     path: '/drag',
@@ -44,9 +34,9 @@ const router = createRouter({
                     component: () => import('@/views/pages/Drag.vue')
                 },
                 {
-                    path: '/uikit/tree',
-                    name: 'tree',
-                    component: () => import('@/views/uikit/TreeDoc.vue')
+                    path: '/acc/callback',
+                    name: 'acc-callback',
+                    component: () => import('@/views/pages/auth/CallBackACC.vue')
                 },
                 {
                     path: '/uikit/panel',
