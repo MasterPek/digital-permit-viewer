@@ -120,9 +120,6 @@ export const accForms = async () => {
       headers: AUTH_HEADERS(token),
     });
 
-    console.log("Response status:", response);
-    
-
     if (!response.ok) {
       throw new Error(`Failed to fetch forms: ${response.status}`);
     }

@@ -1,6 +1,6 @@
 <template>
-  <div class="flex flex-col justify-center items-center h-full w-full">
-    <div v-if="!refreshToken" class="flex flex-col gap-4">
+  <div class="flex flex-col h-full w-full">
+    <div v-if="!refreshToken" class="flex flex-col justify-center items-center w-full h-full gap-4">
       <p>Proceed to ACC to fetch forms</p>
       <Button @click="login" label="Login" />
     </div>
@@ -13,7 +13,7 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
 import Permit from "../permit/Permit.vue";
-import { accLogin, accMe, listenForAuthMessage } from "@/service/acc.service";
+import { accLogin, listenForAuthMessage } from "@/service/acc.service";
 import { accToken } from "@/utils/token";
 import { getAccCookie } from "@/utils/accCookie";
 
@@ -32,21 +32,8 @@ const handleAuthSuccess = (token) => {
 // Start listening for the authentication message
 listenForAuthMessage(handleAuthSuccess);
 
-const fetchMe = async () => {
-  try {
-    const response = await accMe();
-
-    const data = await response.json();
-    console.log("ACC_ME Data:", data);
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching ACC_ME:", error);
-  }
-};
-
 onMounted(() => {
-  fetchMe();
+
 });
 
 </script>

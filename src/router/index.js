@@ -39,9 +39,9 @@ const router = createRouter({
                     component: () => import('@/views/pages/Drag.vue')
                 },
                 {
-                    path: '/uikit/panel',
-                    name: 'panel',
-                    component: () => import('@/views/uikit/PanelsDoc.vue')
+                    path: "/:pathMatch(.*)*",
+                    name: "notfound",
+                    component: () => import("@/views/pages/NotFound.vue"),
                 },
 
                 {
@@ -106,12 +106,6 @@ const router = createRouter({
             name: 'landing',
             component: () => import('@/views/pages/Landing.vue')
         },
-        {
-            path: '/pages/notfound',
-            name: 'notfound',
-            component: () => import('@/views/pages/NotFound.vue')
-        },
-
         {
             path: '/auth/login',
             name: 'login',

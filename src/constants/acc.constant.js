@@ -9,4 +9,5 @@ export const ACC_ENDPOINTS = {
   ACC_TOKEN: `${accBaseUrl}/authentication/v2/token`,
   ACC_ME: `/api/userprofile/v1/users/@me`,  // dont provide accBaseUrl because of cors
   ACC_FORMS: `${accBaseUrl}/construction/forms/v1/projects/${projectId}/forms`,
+  ACC_ME2: `${accBaseUrl}/acc/v1/users/me`,
 }

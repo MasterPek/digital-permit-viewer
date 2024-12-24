@@ -91,7 +91,7 @@ watch(() => props.modelValue, (newValue) => {
   top: 0;
   left: 0;
   padding: 10px;
-  background: #18181b;
+  background: var(--surface-card);
   height: 100%; 
   width: 60px; 
   z-index: 10; /* Ensure it appears above the map */
@@ -112,8 +112,8 @@ watch(() => props.modelValue, (newValue) => {
   width: 40vw; /* Width of the drawer */
   max-width: 400px;
   height: 100%;
-  background-color: #18181b;
-  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  background-color: var(--surface-card);
+  border-left: 1px solid var(--surface-border);
   transition: transform 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
@@ -131,13 +131,13 @@ watch(() => props.modelValue, (newValue) => {
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  border-bottom: 1px solid #000000;
+  border-bottom: 1px solid var(--surface-border);
 }
 
 .drawer-body {
   flex-grow: 1;
   overflow-y: auto;
-  padding: 15px;
+  /* padding: 15px; */
 }
 
 .close-button {
