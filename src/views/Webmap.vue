@@ -8,6 +8,7 @@ import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
 import AuthACC from "./pages/auth/AuthACC.vue";
+import DrawerWebmapRight from "@/components/DrawerWebmapRight.vue";
 
 const basemapStore = useBasemapStore();
 
@@ -21,6 +22,15 @@ let webmap;
 
 const treeNodes = ref([]);
 const selectedNodes = ref({});
+
+const isRightDrawerOpen = ref(false);
+const selectedForm = ref(null);
+
+const handleFormSelected = (form) => {
+    console.log("Form Selected in webmap:", form);
+    selectedForm.value = form;
+    isRightDrawerOpen.value = true;
+};
 
 // Country Info
 const countries = CountryService.getData();
@@ -262,11 +272,11 @@ onMounted(initializeMapView);
         <div class="col-span-12 relative w-full h-full">
             <div>
                 <div class="mb-3 flex items-center justify-between">
-                    <FloatLabel>
+                    <!-- <FloatLabel>
                         <TreeSelect v-model="selectedNodes" :options="treeNodes" selectionMode="checkbox"
                             placeholder="Select Layers" inputId="layers_label" class="md:w-80 w-full" display="chip" />
                         <label for="layers_label">Select Layers</label>
-                    </FloatLabel>
+                    </FloatLabel> -->
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                 </div>
                 <div ref="mapViewDiv" style="height: 600px; width: 100%; position: relative; ">
@@ -280,10 +290,11 @@ onMounted(initializeMapView);
                             </div>
                             <!-- TODO: ask for arcgis server does it have api-key to access -->
                             <div class="h-full" v-else-if="drawerTitle === 'Permit'">
-                                <AuthACC />
+                                <AuthACC @formSelected="handleFormSelected" />
                             </div>
                         </template>
                     </DrawerWebmap>
+                    <DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm" />
                 </div>
             </div>
         </div>

@@ -93,7 +93,7 @@ watch(() => props.modelValue, (newValue) => {
   padding: 10px;
   background: var(--surface-card);
   height: 100%; 
-  width: 60px; 
+  width: 50px; 
   z-index: 10; /* Ensure it appears above the map */
   cursor: auto;
 }
@@ -108,9 +108,9 @@ watch(() => props.modelValue, (newValue) => {
 .web-map-drawer {
   position: absolute;
   top: 0;
-  left: 60px; /* Align next to the drawer container */
+  left: 50px; /* Align next to the drawer container */
   width: 40vw; /* Width of the drawer */
-  max-width: 400px;
+  max-width: 300px;
   height: 100%;
   background-color: var(--surface-card);
   border-left: 1px solid var(--surface-border);
@@ -123,7 +123,6 @@ watch(() => props.modelValue, (newValue) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  /* background-color: aquamarine; */
 }
 
 .drawer-header {

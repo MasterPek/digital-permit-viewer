@@ -5,13 +5,13 @@
       <Button @click="login" label="Login" />
     </div>
     <div v-else class="flex flex-col gap-4">
-      <Permit />
+      <Permit @formSelected="handlePermitFormSelected" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { ref } from "vue";
 import Permit from "../permit/Permit.vue";
 import { accLogin, listenForAuthMessage } from "@/service/acc.service";
 import { accToken } from "@/utils/token";
@@ -19,6 +19,12 @@ import { getAccCookie } from "@/utils/accCookie";
 
 const token = accToken();
 const refreshToken = ref(getAccCookie("acc_refreshToken"));
+const emit = defineEmits(['formSelected']);
+
+const handlePermitFormSelected = (form) => {
+  console.log('Form selected in AuthACC:', form);
+  emit('formSelected', form); // Pass the event up to Webmap.vue
+};
 
 // Login Function
 const login = () => {
@@ -31,9 +37,5 @@ const handleAuthSuccess = (token) => {
 
 // Start listening for the authentication message
 listenForAuthMessage(handleAuthSuccess);
-
-onMounted(() => {
-
-});
 
 </script>

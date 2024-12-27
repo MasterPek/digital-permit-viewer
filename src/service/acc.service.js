@@ -115,16 +115,10 @@ export const accMe = async () => {
 
 export const accForms = async () => {
   try {
-    const response = await fetch(ACC_ENDPOINTS.ACC_FORMS, {
+    return await fetchWithRetry(ACC_ENDPOINTS.ACC_FORMS, {
       method: METHOD.GET,
-      headers: AUTH_HEADERS(token),
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch forms: ${response.status}`);
-    }
-
-    return response;
   } catch (error) {
     console.error("Error in accForms:", error);
   }
