@@ -23,13 +23,24 @@ let webmap;
 const treeNodes = ref([]);
 const selectedNodes = ref({});
 
+const isDrawerOpen = ref(false);
+
 const isRightDrawerOpen = ref(false);
 const selectedForm = ref(null);
 
+const handleCloseDrawers = () => {
+    isRightDrawerOpen.value = false; // Close DrawerWebmapRight
+};
+
 const handleFormSelected = (form) => {
-    console.log("Form Selected in webmap:", form);
+  if (selectedForm.value === form) {
+    // If the same form is clicked, toggle the drawer
+    isRightDrawerOpen.value = !isRightDrawerOpen.value;
+  } else {
+    // Otherwise, open the drawer with the new form
     selectedForm.value = form;
     isRightDrawerOpen.value = true;
+  }
 };
 
 // Country Info
@@ -282,7 +293,7 @@ onMounted(initializeMapView);
                 <div ref="mapViewDiv" style="height: 600px; width: 100%; position: relative; ">
                     <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
                         style="position: absolute; top: 10px; right: 10px" />
-                    <DrawerWebmap v-model="isDrawerOpen">
+                    <DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
                         <template #default="{ drawerTitle }">
                             <div v-if="drawerTitle === 'Layers'">
                                 <Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"

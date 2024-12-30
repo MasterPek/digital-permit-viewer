@@ -20,12 +20,18 @@ const avatarTooltip = ref('');
 const emit = defineEmits(['formSelected']);
 
 // TODO currently when click permit icon the right drawer open too, open same form and close it and open same form lead to not opening the form
-watch(() => accStore.selectedForm, (newForm) => {
-  if (newForm) {
-    console.log('Form selected in Permit:', newForm);
-    emit('formSelected', newForm);
-  }
-}, { immediate: true });
+watch(
+  () => accStore.selectedForm,
+  (newForm) => {
+    if (newForm) {
+      console.log('Form selected in Permit:', newForm);
+      emit('formSelected', newForm);
+    } else {
+      console.log('No form selected');
+    }
+  },
+  { immediate: false }
+);
 
 const fetchMe = async () => {
   try {

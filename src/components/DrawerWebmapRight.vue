@@ -11,11 +11,18 @@
         <!-- Drawer Body -->
         <div class="drawer-body">
           <slot>
-            <div class="p-4">
-              <h3 class="text-lg font-semibold mb-4">Form Details</h3>
-              <div class="space-y-2">
-                <p><strong>Form ID:</strong> {{ selectedForm?.id }}</p>
-                <p><strong>Description:</strong> {{ selectedForm?.description }}</p>
+            <div class="flex flex-col p-4">
+              <div class="flex flex-col gap-2">
+                  <span class="font-medium text-xl">Approval Status</span>
+                  <span v-if="approvalStatus" :class="statusClass" class="text-xl">{{ approvalStatus }}</span>
+                  <span v-else>Not Available</span>
+              </div>
+              <Divider />
+              <div class="flex flex-col gap-2">
+                <span class="font-medium text-xl">Permit Area</span>
+                <div class="flex justify-center px-4">
+                  <Button label="Show Area" outlined />
+                </div>
               </div>
             </div>
           </slot>
@@ -26,7 +33,7 @@
 </template>
 
 <script setup>
-import { watch, onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import Button from 'primevue/button';
 
 const props = defineProps({
@@ -40,16 +47,39 @@ const props = defineProps({
   }
 });
 
+const approvalStatus = computed(() => {
+  if (!props.selectedForm || !props.selectedForm.customValues) return null;
+
+  const statusField = props.selectedForm.customValues.find(
+    (field) =>
+      field.itemLabel &&
+      field.itemLabel.toLowerCase() === "approval status" &&
+      field.valueName === "choiceVal"
+  );
+
+  return statusField ? statusField.choiceVal : null;
+});
+
+const statusClass = computed(() => {
+  switch (approvalStatus.value) {
+    case 'Approved':
+      return 'text-green-600 font-bold'; // Green for Approved
+    case 'Pending':
+      return 'text-yellow-600 font-bold'; // Yellow for Pending
+    case 'Rejected':
+      return 'text-red-600 font-bold'; // Red for Rejected
+    case 'On Hold':
+      return 'text-orange-600 font-bold'; // Orange for On Hold
+    case 'In Review':
+      return 'text-blue-600 font-bold'; // Blue for In Review
+    case 'Needs Revision':
+      return 'text-purple-600 font-bold'; // Purple for Needs Revision
+    default:
+      return 'text-gray-600 font-bold'; // Gray for unknown statuses
+  }
+});
+
 onMounted(() => {
-  console.log('DrawerWebmapRight mounted');
-});
-
-watch(() => props.modelValue, (newValue) => {
-  console.log('DrawerWebmapRight modelValue changed:', newValue);
-});
-
-watch(() => props.selectedForm, (newValue) => {
-  console.log('DrawerWebmapRight selectedForm changed:', newValue);
 });
 
 const emit = defineEmits(['update:modelValue']);

@@ -1,6 +1,5 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout';
-import AppConfigurator from './AppConfigurator.vue';
 
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 </script>
@@ -16,7 +15,7 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
                     <img src="/demo/images/gamuda.png" class="rounded-xl" alt="" height="35px" width="35px">
                 </div>
 
-                <span class="text-lg sm:text-base md:text-xl">Digital Permit Viewer</span>
+                <span class="text-lg sm:text-base md:text-xl">Digital Permit</span>
             </router-link>
         </div>
 

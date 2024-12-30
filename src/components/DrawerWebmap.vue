@@ -57,7 +57,7 @@ const props = defineProps({
 });
 
 // Emits for v-model support
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'close-drawers']);
 
 // Drawer state
 const isDrawerOpen = ref(false);
@@ -72,11 +72,11 @@ const toggleDrawer = (title) => {
   }
 };
 
-
 // Close drawer method
 const closeDrawer = () => {
   isDrawerOpen.value = false;
   emit('update:modelValue', false);
+  emit('close-drawers');
 };
 
 // Watch for external control of drawer
