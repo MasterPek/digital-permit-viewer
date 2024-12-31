@@ -12,8 +12,8 @@ import DrawerWebmapRight from "@/components/DrawerWebmapRight.vue";
 
 const basemapStore = useBasemapStore();
 
-esriConfig.apiKey = "CuT30OwJRnb1Fuv9";
-esriConfig.portalUrl = "https://vertex.gamuda.com.my/portal-au";
+esriConfig.apiKey = import.meta.env.VITE_ARCGIS_CONFIG_APIKEY;
+esriConfig.portalUrl = import.meta.env.VITE_ARCGIS_PORTAL_URL;
 
 const mapViewDiv = ref(null);
 const toast = useToast();
@@ -88,7 +88,7 @@ const transformLayerToTreeNode = (layerData, checkedState = {}) => {
 // Basemap switcher
 const initializeMapView = () => {
     webmap = new WebMap({
-        portalItem: { id: "29c59d6b17f14ee7a2eb9bd88d444fc5" },
+        portalItem: { id: import.meta.env.VITE_ARCGIS_WEBMAP_ID },
         basemap: basemapStore.currentBasemapId,
     });
 

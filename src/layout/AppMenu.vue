@@ -8,7 +8,6 @@ const model = ref([
         // label: 'Basemaps',
         items: [
         { label: 'Street View', icon: 'pi pi-fw pi-map', to: '/' },
-        { label: 'Imagery View', icon: 'pi pi-fw pi-map', to: '/imagery-map' }
         ],
     },
     {

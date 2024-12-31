@@ -14,11 +14,6 @@ const router = createRouter({
                     component: () => import('@/views/Webmap.vue')
                 },
                 {
-                    path: '/imagery-map',
-                    name: 'imagery-map',
-                    component: () => import('@/views/WorldImagery.vue')
-                },
-                {
                     path: '/permit/survey',
                     name: 'survey-permit',
                     component: () => import('@/views/pages/permit/Survey.vue')
