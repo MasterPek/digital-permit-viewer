@@ -22,7 +22,6 @@ const refreshToken = ref(getAccCookie("acc_refreshToken"));
 const emit = defineEmits(['formSelected']);
 
 const handlePermitFormSelected = (form) => {
-  console.log('Form selected in AuthACC:', form);
   emit('formSelected', form); // Pass the event up to Webmap.vue
 };
 

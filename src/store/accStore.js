@@ -15,6 +15,7 @@ export const useAccStore = defineStore("acc", () => {
 
       items.value = forms.value.map((form) => ({
         label: form.name,
+        form: form,
         command: () => {
           setSelectedForm(form);
         },

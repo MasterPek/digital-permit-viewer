@@ -1,6 +1,6 @@
 <template>
   <Transition name="slide-fade">
-    <div v-if="modelValue" class="web-map-drawer2" :class="{ 'drawer-open': modelValue }">
+    <div v-if="modelValue" class="webmap-drawer-right" :class="{ 'drawer-open': modelValue }">
       <div class="drawer-content">
         <!-- Drawer Header -->
         <div class="drawer-header">
@@ -90,12 +90,12 @@ const closeDrawer = () => {
 </script>
 
 <style scoped>
-.web-map-drawer2 {
+.webmap-drawer-right {
   position: absolute;
   top: 0;
   right: 0;
   width: 40vw;
-  max-width: 400px;
+  max-width: 350px;
   height: 100%;
   background-color: var(--surface-card);
   border-left: 1px solid var(--surface-border);
@@ -115,7 +115,7 @@ const closeDrawer = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 10px;
   border-bottom: 1px solid var(--surface-border);
 }
 
@@ -129,13 +129,13 @@ const closeDrawer = () => {
 }
 
 @media (max-width: 768px) {
-  .web-map-drawer2 {
+  .webmap-drawer-right {
     width: 60vw;
   }
 }
 
 @media (max-width: 480px) {
-  .web-map-drawer2 {
+  .webmap-drawer-right {
     width: 80vw;
   }
 }

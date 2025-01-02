@@ -110,7 +110,7 @@ watch(() => props.modelValue, (newValue) => {
   top: 0;
   left: 50px; /* Align next to the drawer container */
   width: 40vw; /* Width of the drawer */
-  max-width: 300px;
+  max-width: 350px;
   height: 100%;
   background-color: var(--surface-card);
   border-left: 1px solid var(--surface-border);
