@@ -1,10 +1,10 @@
 <template>
   <div class="topbar">
-    <p>Forms</p>
+    <Button icon="pi pi-filter" text @click="toggle" v-tooltip="'Filter'" />
     <Avatar :label="avatarLabel" shape="circle" v-tooltip="`${avatarTooltip}`" />
   </div>
-  <div class="m-2">
-    <PanelMenu :model="menuItems">
+  <div class="m-2 mt-0">
+    <PanelMenu :model="filteredMenuItems">
       <template #item="{ item }">
         <a v-ripple class="flex items-center px-4 py-2 cursor-pointer group">
           <!-- Icon -->
@@ -12,12 +12,12 @@
             <span :class="[{ 'font-semibold': item.items }]">{{ item.label }}</span>
   
             <div class="flex justify-between items-center">
-              <span v-if="item.approvalStatus" :class="statusClass(item.approvalStatus)" class="text-sm">
+              <Tag v-if="item.approvalStatus" :severity="statusClass(item.approvalStatus, 'severity')" class="text-sm">
                 {{ item.approvalStatus }}
-              </span>
-              <span class="text-sm" v-else>
+              </Tag>
+              <Tag severity="secondary" class="text-sm" v-else>
                 Not Available
-              </span>
+              </Tag>
 
               <Button label="created by" size="small" text />
             </div>
@@ -26,6 +26,23 @@
       </template>
     </PanelMenu>
   </div>
+  <Popover ref="op">
+    <div class="grid grid-cols-2">
+      <Tag
+      class="cursor-pointer m-2"
+      :severity="statusClass(status, 'severity')"
+        v-for="status in statusOptions"
+        :key="status"
+        @click="selectStatus(status)"
+      >{{ status }}</Tag>
+
+      <Divider class="col-span-2" />
+
+      <div class="col-span-2 flex justify-end">
+        <Button label="Clear" severity="secondary" text @click="selectStatus(null)" />
+      </div>
+    </div>
+  </Popover>
 </template>
 
 <script setup>
@@ -40,6 +57,42 @@ const emit = defineEmits(['formSelected']);
 const avatarLabel = ref('');
 const avatarTooltip = ref('');
 
+const op = ref()
+const selectedStatus = ref(null);
+const statusOptions = ref([]);
+
+const toggle = (event) => {
+    op.value.toggle(event);
+}
+
+// Select a status and filter the menu items
+const selectStatus = (status) => {
+  selectedStatus.value = status;
+  op.value.hide();
+};
+
+const fetchStatusOptions = () => {
+  if (accStore.items.length > 0 && accStore.items[0].form?.customValues) {
+    const statusField = accStore.items[0].form.customValues.find(
+      (field) =>
+        field.itemLabel?.toLowerCase() === 'approval status' &&
+        field.valueName === 'choiceVal'
+    );
+
+    if (statusField?.valueOptions) {
+      statusOptions.value = statusField.valueOptions;
+    }
+  }
+};
+
+const filteredMenuItems = computed(() => {
+  if (!selectedStatus.value) return menuItems.value;
+
+  return menuItems.value.filter((item) => {
+    return item.approvalStatus === selectedStatus.value;
+  });
+});
+
 // Computed menu items with enriched Approval Status
 const menuItems = computed(() => {
   console.log('accStore.items:', accStore.items); // Log the items from the store
@@ -52,9 +105,7 @@ const menuItems = computed(() => {
           field.itemLabel.toLowerCase() === 'approval status' &&
           field.valueName === 'choiceVal'
       );
-
       console.log('Status field found:', statusField); // Log the status field
-
       return {
         ...item,
         approvalStatus: statusField ? statusField.choiceVal : null,
@@ -64,23 +115,19 @@ const menuItems = computed(() => {
   });
 });
 
-const statusClass = (status) => {
-  switch (status) {
-    case 'Approved':
-      return 'text-green-600 font-bold';
-    case 'Pending':
-      return 'text-yellow-600 font-bold';
-    case 'Rejected':
-      return 'text-red-600 font-bold';
-    case 'On Hold':
-      return 'text-orange-600 font-bold';
-    case 'In Review':
-      return 'text-blue-600 font-bold';
-    case 'Needs Revision':
-      return 'text-purple-600 font-bold';
-    default:
-      return 'text-gray-600 font-bold';
-  }
+const statusClass = (status, type = 'class') => {
+  const statusMap = {
+    Approved: { class: 'text-green-600', severity: 'success' },
+    Pending: { class: 'text-yellow-600', severity: 'warn' },
+    Rejected: { class: 'text-red-600', severity: 'danger' },
+    'On Hold': { class: 'text-orange-600', severity: 'info' },
+    'In Review': { class: 'text-blue-600', severity: 'info' },
+    'Needs Revision': { class: 'text-blue-600', severity: 'info' },
+    default: { class: 'text-gray-600', severity: 'secondary' },
+  };
+
+  const result = statusMap[status] || statusMap.default;
+  return type === 'class' ? result.class : result.severity;
 };
 
 watch(
@@ -112,6 +159,7 @@ const fetchMe = async () => {
 
 const loadForms = async () => {
   await accStore.fetchForms();
+  fetchStatusOptions();
 };
 
 onMounted(() => {
@@ -125,7 +173,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: 1rem;
   background-color: var(--surface-card);
   border-bottom: 1px solid var(--surface-border);
   box-shadow: 0 0 20px rgba(20, 20, 20, 0.1);
