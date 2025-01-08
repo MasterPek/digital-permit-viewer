@@ -11,13 +11,11 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import Permit from "../permit/Permit.vue";
 import { accLogin, listenForAuthMessage } from "@/service/acc.service";
-import { accToken } from "@/utils/token";
 import { getAccCookie } from "@/utils/accCookie";
 
-const token = accToken();
 const refreshToken = ref(getAccCookie("acc_refreshToken"));
 const emit = defineEmits(['formSelected']);
 
@@ -36,5 +34,4 @@ const handleAuthSuccess = (token) => {
 
 // Start listening for the authentication message
 listenForAuthMessage(handleAuthSuccess);
-
 </script>

@@ -5,8 +5,6 @@ import fetchWithRetry from "@/middlewares/protectRoute";
 import { getAccCookie, setAccCookie } from "@/utils/accCookie";
 import { accToken } from "@/utils/token";
 
-const token = accToken();
-
 export const accLogin = () => {
   const state = Date.now().toString(); // Unique ID for session
   const authUrl = `${ACC_ENDPOINTS.ACC_LOGIN}&state=${state}`;
@@ -123,3 +121,19 @@ export const accForms = async () => {
     console.error("Error in accForms:", error);
   }
 };
+
+export const accAccount = async () => {
+  try {
+    const response = await fetch(ACC_ENDPOINTS.ACC_ACCOUNTS, {
+      method: METHOD.GET,
+      headers: AUTH_HEADERS(accToken()),
+    });
+
+    const accountId = response.data.accounts[0].account_id;
+    console.log('Account ID:', accountId);
+
+    return accountId;
+  } catch (error) {
+    
+  }
+}

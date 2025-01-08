@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { accMe } from '@/service/acc.service';
+import { accAccount, accMe } from '@/service/acc.service';
 import { useAccStore } from '@/store/accStore';
 import { onMounted, ref, computed, watch } from 'vue';
 
@@ -162,9 +162,20 @@ const loadForms = async () => {
   fetchStatusOptions();
 };
 
+const fetchAccountId = () => {
+  try {
+    const res = accAccount();
+ 
+    console.log('cehk',res);
+  } catch (error) {
+    console.log('error',error);
+  }
+}
+
 onMounted(() => {
   fetchMe();
   loadForms();
+  fetchAccountId();
 });
 </script>
 

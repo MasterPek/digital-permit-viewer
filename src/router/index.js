@@ -24,7 +24,7 @@ const router = createRouter({
                     component: () => import('@/views/pages/permit/Permit.vue')
                 },
                 {
-                    path: '/acc/callback',
+                    path: 'dev/digital-permit/acc/auth/callback',
                     name: 'acc-callback',
                     component: () => import('@/views/pages/auth/CallBackACC.vue')
                 },
