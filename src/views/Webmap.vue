@@ -2,6 +2,8 @@
 import { ref, onMounted, computed, watch } from "vue";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
+import Sketch from "@arcgis/core/widgets/Sketch";
+import GraphicLayer from "@arcgis/core/layers/GraphicsLayer";
 import esriConfig from "@arcgis/core/config";
 import { CountryService } from "@/service/CountryService";
 import { useToast } from "primevue/usetoast";
@@ -15,32 +17,49 @@ const basemapStore = useBasemapStore();
 esriConfig.apiKey = import.meta.env.VITE_ARCGIS_CONFIG_APIKEY;
 esriConfig.portalUrl = import.meta.env.VITE_ARCGIS_PORTAL_URL;
 
-const mapViewDiv = ref(null);
 const toast = useToast();
+
+const mapViewDiv = ref(null);
+const graphicLayer = new GraphicLayer()
+
 let view;
 let webmap;
+let sketch;
 
 const treeNodes = ref([]);
 const selectedNodes = ref({});
+
+const isSketchVisible = ref(false);
 
 const isDrawerOpen = ref(false);
 
 const isRightDrawerOpen = ref(false);
 const selectedForm = ref(null);
+const isAddPermitMode = ref(false);
 
 const handleCloseDrawers = () => {
     isRightDrawerOpen.value = false; // Close DrawerWebmapRight
 };
 
+const handleCloseDrawerRight = () => {
+    isRightDrawerOpen.value = false;
+    isAddPermitMode.value = false;
+};
+
 const handleFormSelected = (form) => {
-  if (selectedForm.value === form) {
-    // If the same form is clicked, toggle the drawer
-    isRightDrawerOpen.value = !isRightDrawerOpen.value;
-  } else {
-    // Otherwise, open the drawer with the new form
-    selectedForm.value = form;
+    if (selectedForm.value === form) {
+        // If the same form is clicked, toggle the drawer
+        isRightDrawerOpen.value = !isRightDrawerOpen.value;
+    } else {
+        // Otherwise, open the drawer with the new form
+        selectedForm.value = form;
+        isRightDrawerOpen.value = true;
+    }
+};
+
+const handleAddPermit = () => {
+    isAddPermitMode.value = true;
     isRightDrawerOpen.value = true;
-  }
 };
 
 // Country Info
@@ -52,6 +71,44 @@ const countryName = computed(() => {
     const country = countries.find((c) => c.code === countryCode.value);
     return country ? country.name : "Unknown";
 });
+
+const initializeMapView = () => {
+    webmap = new WebMap({
+        portalItem: { id: import.meta.env.VITE_ARCGIS_WEBMAP_ID },
+        basemap: basemapStore.currentBasemapId,
+    });
+
+    webmap.add(graphicLayer);
+
+    view = new MapView({
+        container: mapViewDiv.value,
+        map: webmap,
+    });
+
+    view.on("drag", () => (mapViewDiv.value.style.cursor = "grabbing"));
+    view.on("drag-end", () => (mapViewDiv.value.style.cursor = "default"));
+    view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "default"));
+
+    view.when(
+        () => {
+            console.log("MapView loaded successfully");
+            fetchAllLayers();
+            initializeSketch();
+        },
+        (error) => console.error("Error loading MapView:", error),
+    );
+};
+
+const initializeSketch = () => {
+    sketch = new Sketch({
+        view: view,
+        layer: graphicLayer,
+        creationMode: "update", // Allows users to update existing graphics
+    });
+
+    // Add the Sketch widget to the view
+    view.ui.add(sketch, "top-right");
+};
 
 const transformLayerToTreeNode = (layerData, checkedState = {}) => {
     const transformLayer = (layer) => {
@@ -84,35 +141,15 @@ const transformLayerToTreeNode = (layerData, checkedState = {}) => {
     return transformLayer(layerData);
 };
 
-
-// Basemap switcher
-const initializeMapView = () => {
-    webmap = new WebMap({
-        portalItem: { id: import.meta.env.VITE_ARCGIS_WEBMAP_ID },
-        basemap: basemapStore.currentBasemapId,
-    });
-
-    view = new MapView({
-        container: mapViewDiv.value,
-        map: webmap,
-    });
-
-    view.on("drag", () => (mapViewDiv.value.style.cursor = "grabbing"));
-    view.on("drag-end", () => (mapViewDiv.value.style.cursor = "default"));
-    view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "default"));
-
-    view.when(
-        () => {
-            console.log("MapView loaded successfully");
-            fetchAllLayers();
-        },
-        (error) => console.error("Error loading MapView:", error),
-    );
+const toggleSketch = () => {
+    isSketchVisible.value = !isSketchVisible.value;
+    sketch.viewModel.toggleUpdateTool();
 };
 
 const fetchAllLayers = async () => {
     try {
         const operationalLayers = webmap.layers.toArray();
+        console.log("operationalLayers:", operationalLayers);
 
         const operationalLayerData = operationalLayers.map((layer) => {
             const extractLayerHierarchy = (layerOrGroup) => {
@@ -289,6 +326,7 @@ onMounted(initializeMapView);
                         <label for="layers_label">Select Layers</label>
                     </FloatLabel> -->
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
+                    <Button @click="toggleSketch" :label="isSketchVisible ? 'Hide Sketch' : 'Show Sketch'" />
                 </div>
                 <div ref="mapViewDiv" style="height: 600px; width: 100%; position: relative; ">
                     <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
@@ -301,11 +339,12 @@ onMounted(initializeMapView);
                             </div>
                             <!-- TODO: ask for arcgis server does it have api-key to access -->
                             <div class="h-full" v-else-if="drawerTitle === 'Permit'">
-                                <AuthACC @formSelected="handleFormSelected" />
+                                <AuthACC @formSelected="handleFormSelected" @addPermit="handleAddPermit" />
                             </div>
                         </template>
                     </DrawerWebmap>
-                    <DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm" />
+                    <DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm"
+                        :is-add-permit-mode="isAddPermitMode" @close-drawer-right="handleCloseDrawerRight" />
                 </div>
             </div>
         </div>

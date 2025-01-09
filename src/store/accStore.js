@@ -1,43 +1,89 @@
-import { accForms } from "@/service/acc.service";
+import { accForms, accTemplateForms } from "@/service/acc.service";
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
-export const useAccStore = defineStore("acc", () => {
-  const forms = ref([]);
-  const items = ref([]);
-  const selectedForm = ref(null);
+export const useAccFormStore = defineStore("acc", () => {
+    const forms = ref([]);
+    const items = ref([]);
+    const selectedForm = ref(null);
 
-  const fetchForms = async () => {
+    const fetchForms = async () => {
+        try {
+            const res = await accForms();
+            const data = await res.json();
+            forms.value = data.data;
+
+            items.value = forms.value.map((form) => ({
+                label: form.name,
+                form: form,
+                command: () => {
+                    setSelectedForm(form);
+                },
+            }));
+
+            return data;
+        } catch (error) {
+            console.error("Error fetching forms:", error);
+        }
+    };
+
+    const setSelectedForm = (form) => {
+        selectedForm.value = form;
+        console.log("Selected form:", form);
+    };
+
+    return {
+        forms,
+        items,
+        selectedForm,
+        fetchForms,
+        setSelectedForm,
+    };
+});
+
+export const useAccTemplateStore = defineStore("accTemplate", () => {
+  // State
+  const templates = ref([]);
+  const isLoading = ref(false);
+  const error = ref(null);
+
+  // Actions
+  const fetchTemplates = async () => {
+    isLoading.value = true;
+    error.value = null;
+
     try {
-      const res = await accForms();
-      const data = await res.json();
-      forms.value = data.data;
+      const response = await accTemplateForms();
 
-      items.value = forms.value.map((form) => ({
-        label: form.name,
-        form: form,
-        command: () => {
-          setSelectedForm(form);
-        },
-      }));
+      if (!response.ok) {
+        throw new Error(`Failed to fetch templates: ${response.statusText}`);
+      }
 
-      console.log("Forms fetched:", forms.value);
-      return data;
-    } catch (error) {
-      console.error("Error fetching forms:", error);
+      const data = await response.json();
+
+      if (data?.data) {
+        templates.value = data.data;
+      } else {
+        throw new Error("Invalid data format received from the API");
+      }
+    } catch (err) {
+      error.value = err.message;
+      console.error("Failed to fetch templates:", err);
+    } finally {
+      isLoading.value = false;
     }
   };
 
-  const setSelectedForm = (form) => {
-    selectedForm.value = form;
-    console.log("Selected form:", form);
-  };
+  // Getters (optional)
+  const activeTemplates = computed(() => {
+    return templates.value.filter((template) => template.status === "active");
+  });
 
   return {
-    forms,
-    items,
-    selectedForm,
-    fetchForms,
-    setSelectedForm,
+    templates,
+    isLoading,
+    error,
+    fetchTemplates,
+    activeTemplates,
   };
 });

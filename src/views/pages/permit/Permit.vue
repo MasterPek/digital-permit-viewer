@@ -1,6 +1,9 @@
 <template>
   <div class="topbar">
-    <Button icon="pi pi-filter" text @click="toggle" v-tooltip="'Filter'" />
+    <div>
+      <Button icon="pi pi-filter" text @click="toggle" v-tooltip="'Filter'" />
+      <Button icon="pi pi-plus" text v-tooltip="'Add Permit'" @click="addPermit" />
+    </div>
     <Avatar :label="avatarLabel" shape="circle" v-tooltip="`${avatarTooltip}`" />
   </div>
   <div class="m-2 mt-0">
@@ -47,12 +50,12 @@
 
 <script setup>
 import { accAccount, accMe } from '@/service/acc.service';
-import { useAccStore } from '@/store/accStore';
+import { useAccFormStore } from '@/store/accStore';
 import { onMounted, ref, computed, watch } from 'vue';
 
-const accStore = useAccStore();
+const accStore = useAccFormStore();
 
-const emit = defineEmits(['formSelected']);
+const emit = defineEmits(['formSelected', 'addPermit']);
 
 const avatarLabel = ref('');
 const avatarTooltip = ref('');
@@ -141,6 +144,10 @@ watch(
   },
   { immediate: false }
 );
+
+const addPermit = () => {
+  emit('addPermit');
+};
 
 const fetchMe = async () => {
   try {

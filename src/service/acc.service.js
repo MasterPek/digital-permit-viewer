@@ -111,6 +111,18 @@ export const accMe = async () => {
   }
 };
 
+export const accTemplateForms = async () => {
+  try {
+    const response = await fetchWithRetry(ACC_ENDPOINTS.ACC_TEMPLATE_FORMS, {
+      method: METHOD.GET,
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error in accTemplateForms:", error);
+  }
+}
+
 export const accForms = async () => {
   try {
     return await fetchWithRetry(ACC_ENDPOINTS.ACC_FORMS, {
