@@ -9,8 +9,9 @@ import { CountryService } from "@/service/CountryService";
 import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
-import AuthACC from "./pages/auth/AuthACC.vue";
 import DrawerWebmapRight from "@/components/DrawerWebmapRight.vue";
+import DrawerWebmap from "@/components/DrawerWebmap.vue";
+import AuthACC from "./auth/AuthACC.vue";
 
 const basemapStore = useBasemapStore();
 
@@ -320,12 +321,17 @@ onMounted(initializeMapView);
         <div class="col-span-12 relative w-full h-full">
             <div>
                 <div class="mb-3 flex items-center justify-between">
+                    <!-- <FloatLabel>
+                        <TreeSelect v-model="selectedNodes" :options="treeNodes" selectionMode="checkbox"
+                            placeholder="Select Layers" inputId="layers_label" class="md:w-80 w-full" display="chip" />
+                        <label for="layers_label">Select Layers</label>
+                    </FloatLabel> -->
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                     <Button @click="toggleSketch" :label="isSketchVisible ? 'Hide Sketch' : 'Show Sketch'" />
                 </div>
-                <div ref="mapViewDiv" style="height: 100vh; width: 100%; position: relative; ">
+                <div ref="mapViewDiv" style="height: 600px; width: 100%; position: relative; ">
                     <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
-                        style="position: absolute; bottom: 25px; right: 10px" />
+                        style="position: absolute; top: 10px; right: 10px" />
                     <DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
                         <template #default="{ drawerTitle }">
                             <div v-if="drawerTitle === 'Layers'">

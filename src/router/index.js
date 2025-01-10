@@ -10,7 +10,7 @@ const router = createRouter({
             children: [
                 {
                     path: '/',
-                    name: 'street-map',
+                    name: 'webmap',
                     component: () => import('@/views/Webmap.vue')
                 },
                 {
@@ -40,9 +40,9 @@ const router = createRouter({
                 },
 
                 {
-                    path: '/uikit/overlay',
-                    name: 'overlay',
-                    component: () => import('@/views/uikit/OverlayDoc.vue')
+                    path: '/webmap/test',
+                    name: 'webmap-test',
+                    component: () => import('@/views/pages/WebmapTest.vue')
                 },
                 {
                     path: '/uikit/media',
