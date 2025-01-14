@@ -1,5 +1,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
+import esriId from '@arcgis/core/identity/IdentityManager';
+import OAuthInfo from '@arcgis/core/identity/OAuthInfo';
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import Sketch from "@arcgis/core/widgets/Sketch";
@@ -12,11 +14,23 @@ import { useBasemapStore } from "@/store/basemapStore";
 import DrawerWebmapRight from "@/components/DrawerWebmapRight.vue";
 import DrawerWebmap from "@/components/DrawerWebmap.vue";
 import AuthACC from "./auth/AuthACC.vue";
+import { arcGisClientId, arcGisPortalUrl, arcGisRedirectUri } from "@/constants/arcgis.constant";
+import { restoreCredentials } from "@/service/arcgis.service";
 
 const basemapStore = useBasemapStore();
 
 esriConfig.apiKey = import.meta.env.VITE_ARCGIS_CONFIG_APIKEY;
 esriConfig.portalUrl = import.meta.env.VITE_ARCGIS_PORTAL_URL;
+
+// const info = new OAuthInfo({
+//     appId: arcGisClientId,
+//     popup: true,
+//     popupCallbackUrl: arcGisRedirectUri,
+//     portalUrl: import.meta.env.VITE_ARCGIS_PORTAL_URL,
+// });
+
+// // Register the OAuth configuration
+// esriId.registerOAuthInfos([info]);
 
 const toast = useToast();
 
@@ -313,7 +327,11 @@ const speedDialItems = ref([
     },
 ]);
 
-onMounted(initializeMapView);
+onMounted(async () => {
+    restoreCredentials().then(() => {
+        initializeMapView();
+    });
+});
 </script>
 
 <template>

@@ -4,26 +4,14 @@
       <div class="drawer-content">
         <!-- Drawer Header -->
         <div class="drawer-header">
-          <h2>{{ isAddPermitMode ? 'Add Permit' : selectedForm?.name }}</h2>
+          <h2>{{ selectedForm?.name }}</h2>
           <Button icon="pi pi-times" class="close-button" @click="closeDrawer" text rounded />
         </div>
 
         <!-- Drawer Body -->
         <div class="drawer-body">
           <slot>
-            <div v-if="isAddPermitMode" class="flex flex-col p-4">
-              <!-- Add Permit Mode: Show Template Selection -->
-              <div class="flex flex-col gap-2">
-                <span class="font-medium text-xl">Select Template</span>
-                <Select
-                  v-model="selectedTemplate"
-                  :options="activeTemplates"
-                  optionLabel="name"
-                  placeholder="Select a template"
-                />
-              </div>
-            </div>
-            <div v-else class="flex flex-col p-4">
+            <div class="flex flex-col p-4">
               <!-- Selected Form Mode: Show Approval Status and Permit Area -->
               <div class="flex flex-col gap-2">
                 <span class="font-medium text-xl">Approval Status</span>
@@ -31,10 +19,11 @@
                 <span v-else>Not Available</span>
               </div>
               <Divider />
-              <div class="flex flex-col gap-2">
+              <div class="flex flex-col gap-3">
                 <span class="font-medium text-xl">Permit Area</span>
-                <div class="flex justify-center px-4">
-                  <Button label="Show Area" outlined />
+                <div class="flex justify-center gap-4 px-4">
+                  <Button label="Show Area" severity="info" outlined size="small" />
+                  <Button label="Edit Area" outlined size="small" />
                 </div>
               </div>
             </div>

@@ -29,6 +29,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/auth/CallBackACC.vue')
                 },
                 {
+                    path: '/dev/digital-permit/gis/auth/callback',
+                    name: 'arcgis-callback',
+                    component: () => import('@/views/pages/auth/CallBackArcGis.vue')
+                },
+                {
                     path: '/drag',
                     name: 'drag',
                     component: () => import('@/views/pages/Drag.vue')

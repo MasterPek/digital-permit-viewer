@@ -5,7 +5,7 @@
       <Button @click="login" label="Login" />
     </div>
     <div v-else class="flex flex-col gap-4">
-      <Permit @formSelected="handlePermitFormSelected" @addPermit="handleAddPermit" />
+      <Permit @formSelected="handlePermitFormSelected" />
     </div>
   </div>
 </template>
@@ -17,14 +17,10 @@ import { accLogin, listenForAuthMessage } from "@/service/acc.service";
 import { getAccCookie } from "@/utils/accCookie";
 
 const refreshToken = ref(getAccCookie("acc_refreshToken"));
-const emit = defineEmits(['formSelected', 'addPermit']);
+const emit = defineEmits(['formSelected']);
 
 const handlePermitFormSelected = (form) => {
   emit('formSelected', form); // Pass the event up to Webmap.vue
-};
-
-const handleAddPermit = () => {
-  emit('addPermit'); // Pass the event up to Webmap.vue
 };
 
 // Login Function

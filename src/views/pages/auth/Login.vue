@@ -1,51 +1,46 @@
 <script setup>
-import { arcGisClientId, arcGisRedirectUri } from '@/constants/arcgis.constant';
-import { ref, onMounted } from 'vue';
-import OAuthInfo from '@arcgis/core/identity/OAuthInfo';
+import { arcGisPortalUrl } from '@/constants/arcgis.constant';
+import { ref, onMounted, onUnmounted } from 'vue';
 import esriId from '@arcgis/core/identity/IdentityManager';
 import Portal from '@arcgis/core/portal/Portal';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const loginStatus = ref('');
 const isLoading = ref(false);
 const error = ref(null);
 
-// Initialize OAuth configuration
-const info = new OAuthInfo({
-    appId: arcGisClientId,
-    popup: false,
-    redirectUri: arcGisRedirectUri,
-    portalUrl: import.meta.env.VITE_ARCGIS_PORTAL_URL,
-});
-
-// Register the OAuth configuration
-esriId.registerOAuthInfos([info]);
+const handleSignedInUser = async () => {
+    try {
+        const credential = await esriId.getCredential(`${arcGisPortalUrl}/sharing`);
+        // Store the credential in localStorage for persistence
+        localStorage.setItem('arcgisCredential', JSON.stringify(credential.toJSON()));
+        
+        // Initialize portal with credential
+        const portal = new Portal();
+        await portal.load();
+        
+        // Wait a brief moment to ensure credential is properly stored
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Navigate to webmap
+        await router.push('/');
+    } catch (err) {
+        console.error('Error handling signed in user:', err);
+    }
+};
 
 const handleLogin = async () => {
     try {
         isLoading.value = true;
         error.value = null;
-
-        // Step 1: Get the user's credentials
-        const credential = await esriId.getCredential(info.portalUrl + '/sharing');
-
-        if (credential) {
-            // Step 2: Initialize Portal after authentication
-            const portal = new Portal();
-            await portal.load();
-
-            // Step 3: Store the user info
-            const userInfo = {
-                userId: credential.userId,
-                token: credential.token,
-                refreshToken: credential.refreshToken,
-                expires: credential.expires,
-            };
-
-            localStorage.setItem('arcgis_user', JSON.stringify(userInfo));
-
-            // Step 4: Redirect or perform other actions
-            window.location.href = '/permit/survey';
-        }
+        
+        // Attempt to sign in
+        await esriId.getCredential(`${arcGisPortalUrl}/sharing`, {
+            oAuthPopupConfirmation: false
+        });
+        
+        await handleSignedInUser();
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'An error occurred during login';
         loginStatus.value = 'Login failed';
@@ -54,33 +49,50 @@ const handleLogin = async () => {
     }
 };
 
-// Handle logout
-const handleLogout = async () => {
-    try {
-        esriId.destroyCredentials();
-        localStorage.removeItem('arcgis_user');
-        loginStatus.value = 'Logged out successfully';
-        // Add your redirect logic here
-        // window.location.href = '/login';
-    } catch (err) {
-        error.value = err instanceof Error ? err.message : 'An error occurred during logout';
+// Message handler for popup callback
+const messageHandler = async (event) => {
+    if (event.origin !== window.location.origin) return;
+   
+    const { code, state } = event.data;
+    if (code && state) {
+        try {
+            await handleSignedInUser();
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'An error occurred processing the login';
+        }
     }
 };
 
-onMounted(async () => {
+onMounted(() => {
+    window.addEventListener('message', messageHandler);
+    
+    // Restore credentials from localStorage if available
+    const savedCredential = localStorage.getItem('arcgisCredential');
+    if (savedCredential) {
+        try {
+            const credential = JSON.parse(savedCredential);
+            esriId.registerToken(credential);
+        } catch (err) {
+            console.error('Error restoring credential:', err);
+        }
+    }
+});
+
+onUnmounted(() => {
+    window.removeEventListener('message', messageHandler);
 });
 </script>
 
 <template>
-    <div
-        class="flex min-h-screen min-w-[100vw] items-center justify-center overflow-hidden bg-surface-50 dark:bg-surface-950">
-        <div class="flex flex-col items-center justify-center">
-            <div>
-                <span class="text-2xl">Welcome to Digital Permit</span>
+    <div class="flex min-h-screen min-w-[100vw] items-center justify-center overflow-hidden bg-surface-50 dark:bg-surface-950">
+        <div class="flex flex-col items-center justify-center gap-4">
+            <div class="flex flex-col items-center gap-4">
+                <span class="text-4xl">Digital Permit Viewer</span>
+                <span class="text-lg text-center">Sign in to access the application</span>
             </div>
-            <div class="w-full px-8 py-20 sm:px-20">
+            <div>
                 <div class="space-y-4">
-                    <Button :disabled="isLoading" @click="handleLogin">
+                    <Button :loading="isLoading" @click="handleLogin">
                         {{ isLoading ? 'Signing in...' : 'Login with ArcGIS' }}
                     </Button>
                 </div>

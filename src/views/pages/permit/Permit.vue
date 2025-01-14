@@ -2,7 +2,6 @@
   <div class="topbar">
     <div>
       <Button icon="pi pi-filter" text @click="toggle" v-tooltip="'Filter'" />
-      <Button icon="pi pi-plus" text v-tooltip="'Add Permit'" @click="addPermit" />
     </div>
     <Avatar :label="avatarLabel" shape="circle" v-tooltip="`${avatarTooltip}`" />
   </div>
@@ -55,7 +54,7 @@ import { onMounted, ref, computed, watch } from 'vue';
 
 const accStore = useAccFormStore();
 
-const emit = defineEmits(['formSelected', 'addPermit']);
+const emit = defineEmits(['formSelected']);
 
 const avatarLabel = ref('');
 const avatarTooltip = ref('');
@@ -144,10 +143,6 @@ watch(
   },
   { immediate: false }
 );
-
-const addPermit = () => {
-  emit('addPermit');
-};
 
 const fetchMe = async () => {
   try {

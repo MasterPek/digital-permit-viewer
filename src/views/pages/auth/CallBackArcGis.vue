@@ -1,18 +1,41 @@
 <template>
-  <div>
+  <div class="flex items-center justify-center min-h-screen">
     <p>Processing authentication...</p>
   </div>
 </template>
 
 <script setup>
-// Extract code and state from URL
-const urlParams = new URLSearchParams(window.location.search);
-const code = urlParams.get("code");
-const state = urlParams.get("state");
+import { onMounted } from 'vue';
+import esriId from '@arcgis/core/identity/IdentityManager';
 
-if (code && window.opener) {
-  // Send the code back to the parent tab
-  window.opener.postMessage({ code, state }, window.location.origin);
-  window.close(); // Close the tab after sending
-}
+const loadHandler = () => {
+  if (window.opener) {
+    if (window.location.hash) {
+      try {
+        // Use the esriId from the ArcGIS API for JavaScript ESM
+        esriId.setOAuthResponseHash(window.location.hash);
+      } catch (e) {
+        console.error('Error setting OAuth response hash:', e);
+        // Fallback to dispatching a custom event
+        window.opener.dispatchEvent(
+          new CustomEvent('arcgis:auth:hash', { detail: window.location.hash })
+        );
+      }
+    } else if (window.location.search) {
+      // Handle location.search if needed
+      window.opener.dispatchEvent(
+        new CustomEvent('arcgis:auth:location:search', { detail: window.location.search })
+      );
+    }
+
+    // Close the popup after handling the OAuth response
+    window.close();
+  } else {
+    console.error('No opener window found.');
+  }
+};
+
+onMounted(() => {
+  loadHandler();
+});
 </script>

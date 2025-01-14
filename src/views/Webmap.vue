@@ -11,6 +11,7 @@ import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
 import AuthACC from "./pages/auth/AuthACC.vue";
 import DrawerWebmapRight from "@/components/DrawerWebmapRight.vue";
+import { restoreCredentials } from "@/service/arcgis.service";
 
 const basemapStore = useBasemapStore();
 
@@ -35,15 +36,9 @@ const isDrawerOpen = ref(false);
 
 const isRightDrawerOpen = ref(false);
 const selectedForm = ref(null);
-const isAddPermitMode = ref(false);
 
 const handleCloseDrawers = () => {
     isRightDrawerOpen.value = false; // Close DrawerWebmapRight
-};
-
-const handleCloseDrawerRight = () => {
-    isRightDrawerOpen.value = false;
-    isAddPermitMode.value = false;
 };
 
 const handleFormSelected = (form) => {
@@ -55,11 +50,6 @@ const handleFormSelected = (form) => {
         selectedForm.value = form;
         isRightDrawerOpen.value = true;
     }
-};
-
-const handleAddPermit = () => {
-    isAddPermitMode.value = true;
-    isRightDrawerOpen.value = true;
 };
 
 // Country Info
@@ -312,7 +302,11 @@ const speedDialItems = ref([
     },
 ]);
 
-onMounted(initializeMapView);
+onMounted(() => {
+    restoreCredentials().then(() => {
+        initializeMapView();
+    });
+});
 </script>
 
 <template>
@@ -323,7 +317,7 @@ onMounted(initializeMapView);
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                     <Button @click="toggleSketch" :label="isSketchVisible ? 'Hide Sketch' : 'Show Sketch'" />
                 </div>
-                <div ref="mapViewDiv" style="height: 100vh; width: 100%; position: relative; ">
+                <div ref="mapViewDiv" style="height: 90vh; width: 100%; position: relative; ">
                     <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
                         style="position: absolute; bottom: 25px; right: 10px" />
                     <DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
@@ -334,12 +328,11 @@ onMounted(initializeMapView);
                             </div>
                             <!-- TODO: ask for arcgis server does it have api-key to access -->
                             <div class="h-full" v-else-if="drawerTitle === 'Permit'">
-                                <AuthACC @formSelected="handleFormSelected" @addPermit="handleAddPermit" />
+                                <AuthACC @formSelected="handleFormSelected" />
                             </div>
                         </template>
                     </DrawerWebmap>
-                    <DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm"
-                        :is-add-permit-mode="isAddPermitMode" @close-drawer-right="handleCloseDrawerRight" />
+                    <DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm" />
                 </div>
             </div>
         </div>
