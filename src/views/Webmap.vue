@@ -2,8 +2,6 @@
 import { ref, onMounted, computed, watch } from "vue";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
-import Sketch from "@arcgis/core/widgets/Sketch";
-import GraphicLayer from "@arcgis/core/layers/GraphicsLayer";
 import esriConfig from "@arcgis/core/config";
 import { CountryService } from "@/service/CountryService";
 import { useToast } from "primevue/usetoast";
@@ -12,6 +10,7 @@ import { useBasemapStore } from "@/store/basemapStore";
 import AuthACC from "./pages/auth/AuthACC.vue";
 import DrawerWebmapRight from "@/components/DrawerWebmapRight.vue";
 import { restoreCredentials } from "@/service/arcgis.service";
+import { useRoute, useRouter } from "vue-router";
 
 const basemapStore = useBasemapStore();
 
@@ -19,23 +18,26 @@ esriConfig.apiKey = import.meta.env.VITE_ARCGIS_CONFIG_APIKEY;
 esriConfig.portalUrl = import.meta.env.VITE_ARCGIS_PORTAL_URL;
 
 const toast = useToast();
+const route = useRoute();
+const router = useRouter();
 
 const mapViewDiv = ref(null);
-const graphicLayer = new GraphicLayer()
 
 let view;
 let webmap;
-let sketch;
 
 const treeNodes = ref([]);
 const selectedNodes = ref({});
 
-const isSketchVisible = ref(false);
+const objectId = route.query.objectid;
 
 const isDrawerOpen = ref(false);
 
 const isRightDrawerOpen = ref(false);
 const selectedForm = ref(null);
+
+const popupData = ref(null);
+const selectedFeature = ref(null);
 
 const handleCloseDrawers = () => {
     isRightDrawerOpen.value = false; // Close DrawerWebmapRight
@@ -62,13 +64,63 @@ const countryName = computed(() => {
     return country ? country.name : "Unknown";
 });
 
+const zoomToFeature = async (feature) => {
+    if (!feature) return;
+    
+    try {
+        // Get the feature's geometry
+        const geometry = feature.geometry;
+        
+        if (geometry) {
+            // Add padding and zoom to the feature
+            await view.goTo({
+                target: geometry,
+                padding: {
+                    top: 50,
+                    right: 50,
+                    bottom: 50,
+                    left: 50
+                }
+            }, {
+                duration: 1000  // Animation duration in milliseconds
+            });
+        }
+    } catch (error) {
+        console.error("Error zooming to feature:", error);
+    }
+};
+
+// Function to find feature by ObjectID
+const findFeatureByObjectId = async (objectId) => {
+    if (!webmap || !objectId) return null;
+
+    await webmap.load();
+    
+    // Loop through operational layers to find the feature
+    for (const layer of webmap.layers.items) {
+        if (layer.type === "feature") {
+            const query = layer.createQuery();
+            query.where = `OBJECTID = ${objectId}`;
+            query.returnGeometry = true;
+            
+            try {
+                const result = await layer.queryFeatures(query);
+                if (result.features.length > 0) {
+                    return result.features[0];
+                }
+            } catch (error) {
+                console.error("Error querying features:", error);
+            }
+        }
+    }
+    return null;
+};
+
 const initializeMapView = () => {
     webmap = new WebMap({
         portalItem: { id: import.meta.env.VITE_ARCGIS_WEBMAP_ID },
         basemap: basemapStore.currentBasemapId,
     });
-
-    webmap.add(graphicLayer);
 
     view = new MapView({
         container: mapViewDiv.value,
@@ -79,25 +131,52 @@ const initializeMapView = () => {
     view.on("drag-end", () => (mapViewDiv.value.style.cursor = "default"));
     view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "default"));
 
+    view.on("click", (event) => {
+        view.hitTest(event).then((response) => {
+            const features = response.results?.filter(
+                (result) => result.graphic?.layer?.type !== "graphics"
+            );
+            
+            if (features && features.length > 0) {
+                const feature = features[0].graphic;
+                selectedFeature.value = feature;
+                popupData.value = {
+                    attributes: feature.attributes,
+                    layerName: feature.layer?.title,
+                    title: feature.layer?.popupTemplate?.title,
+                    content: feature.layer?.popupTemplate?.content
+                };
+                
+                // Update URL with ObjectID
+                const objectId = feature.attributes.OBJECTID;
+                router.push({ 
+                    query: { ...route.query, objectid: objectId }
+                });
+                
+                // Zoom to feature
+                zoomToFeature(feature);
+                
+                console.log("Popup Data:", popupData.value);
+            }
+        });
+    });
+
+    view.on("popup-close", () => {
+        selectedFeature.value = null;
+        popupData.value = null;
+        // Remove objectid from URL when popup closes
+        const query = { ...route.query };
+        delete query.objectid;
+        router.push({ query });
+    });
+
     view.when(
         () => {
             console.log("MapView loaded successfully");
             fetchAllLayers();
-            initializeSketch();
         },
         (error) => console.error("Error loading MapView:", error),
     );
-};
-
-const initializeSketch = () => {
-    sketch = new Sketch({
-        view: view,
-        layer: graphicLayer,
-        creationMode: "update", // Allows users to update existing graphics
-    });
-
-    // Add the Sketch widget to the view
-    view.ui.add(sketch, "top-right");
 };
 
 const transformLayerToTreeNode = (layerData, checkedState = {}) => {
@@ -131,15 +210,10 @@ const transformLayerToTreeNode = (layerData, checkedState = {}) => {
     return transformLayer(layerData);
 };
 
-const toggleSketch = () => {
-    isSketchVisible.value = !isSketchVisible.value;
-    sketch.viewModel.toggleUpdateTool();
-};
-
 const fetchAllLayers = async () => {
     try {
         const operationalLayers = webmap.layers.toArray();
-        console.log("operationalLayers:", operationalLayers);
+        console.table("operationalLayers:", operationalLayers);
 
         const operationalLayerData = operationalLayers.map((layer) => {
             const extractLayerHierarchy = (layerOrGroup) => {
@@ -272,6 +346,29 @@ watch(
     },
 );
 
+watch(() => route.query.objectid, async (newObjectId) => {
+    if (newObjectId && view) {
+        try {
+            // Wait for view to be ready
+            await view.when();
+            
+            const feature = await findFeatureByObjectId(newObjectId);
+            if (feature) {
+                selectedFeature.value = feature;
+                popupData.value = {
+                    attributes: feature.attributes,
+                    layerName: feature.layer?.title,
+                    title: feature.layer?.popupTemplate?.title,
+                    content: feature.layer?.popupTemplate?.content
+                };
+                await zoomToFeature(feature);
+            }
+        } catch (error) {
+            console.error("Error handling objectId change:", error);
+        }
+    }
+});
+
 // SpeedDial Commands
 const speedDialItems = ref([
     {
@@ -302,10 +399,24 @@ const speedDialItems = ref([
     },
 ]);
 
-onMounted(() => {
+onMounted(async() => {
     restoreCredentials().then(() => {
         initializeMapView();
     });
+
+    if (objectId) {
+        const feature = await findFeatureByObjectId(objectId);
+        if (feature) {
+            selectedFeature.value = feature;
+            popupData.value = {
+                attributes: feature.attributes,
+                layerName: feature.layer?.title,
+                title: feature.layer?.popupTemplate?.title,
+                content: feature.layer?.popupTemplate?.content
+            };
+            zoomToFeature(feature);
+        }
+    }
 });
 </script>
 
@@ -315,7 +426,6 @@ onMounted(() => {
             <div>
                 <div class="mb-3 flex items-center justify-between">
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
-                    <Button @click="toggleSketch" :label="isSketchVisible ? 'Hide Sketch' : 'Show Sketch'" />
                 </div>
                 <div ref="mapViewDiv" style="height: 90vh; width: 100%; position: relative; ">
                     <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"

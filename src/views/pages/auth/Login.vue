@@ -24,7 +24,7 @@ const handleSignedInUser = async () => {
         await new Promise(resolve => setTimeout(resolve, 100));
         
         // Navigate to webmap
-        await router.push('/');
+        await router.push('/webmap');
     } catch (err) {
         console.error('Error handling signed in user:', err);
     }

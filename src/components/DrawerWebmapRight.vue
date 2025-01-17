@@ -23,7 +23,7 @@
                 <span class="font-medium text-xl">Permit Area</span>
                 <div class="flex justify-center gap-4 px-4">
                   <Button label="Show Area" severity="info" outlined size="small" />
-                  <Button label="Edit Area" outlined size="small" />
+                  <Button label="Print" icon="pi pi-file-pdf" iconPos="right" outlined size="small" />
                 </div>
               </div>
             </div>

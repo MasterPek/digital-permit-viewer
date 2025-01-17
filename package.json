@@ -1,6 +1,6 @@
 {
-    "name": "sakai-vue",
-    "version": "4.1.0",
+    "name": "digital-permit",
+    "version": "0.0.1",
     "scripts": {
         "dev": "vite",
         "test": "vitest",

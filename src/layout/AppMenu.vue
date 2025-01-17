@@ -7,7 +7,7 @@ const model = ref([
     {
         // label: 'Basemaps',
         items: [
-        { label: 'Webmap', icon: 'pi pi-fw pi-map', to: '/' },
+        { label: 'Webmap', icon: 'pi pi-fw pi-map', to: '/webmap' },
         ],
     },
     {

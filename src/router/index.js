@@ -9,7 +9,7 @@ const router = createRouter({
             component: AppLayout,
             children: [
                 {
-                    path: '/',
+                    path: '/webmap',
                     name: 'webmap',
                     component: () => import('@/views/Webmap.vue')
                 },
