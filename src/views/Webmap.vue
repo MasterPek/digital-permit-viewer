@@ -29,7 +29,7 @@ let webmap;
 const treeNodes = ref([]);
 const selectedNodes = ref({});
 
-const objectId = route.query.objectid;
+const formId = route.query.formid;
 
 const isDrawerOpen = ref(false);
 
@@ -91,8 +91,8 @@ const zoomToFeature = async (feature) => {
 };
 
 // Function to find feature by ObjectID
-const findFeatureByObjectId = async (objectId) => {
-    if (!webmap || !objectId) return null;
+const findFeatureByFormId = async (formId) => {
+    if (!webmap || !formId) return null;
 
     await webmap.load();
     
@@ -100,7 +100,7 @@ const findFeatureByObjectId = async (objectId) => {
     for (const layer of webmap.layers.items) {
         if (layer.type === "feature") {
             const query = layer.createQuery();
-            query.where = `OBJECTID = ${objectId}`;
+            query.where = `formid = ${formId}`;
             query.returnGeometry = true;
             
             try {
@@ -148,9 +148,9 @@ const initializeMapView = () => {
                 };
                 
                 // Update URL with ObjectID
-                const objectId = feature.attributes.OBJECTID;
+                const formId = feature.attributes.formid;
                 router.push({ 
-                    query: { ...route.query, objectid: objectId }
+                    query: { ...route.query, formid: formId }
                 });
                 
                 // Zoom to feature
@@ -164,9 +164,9 @@ const initializeMapView = () => {
     view.on("popup-close", () => {
         selectedFeature.value = null;
         popupData.value = null;
-        // Remove objectid from URL when popup closes
+        // Remove formid from URL when popup closes
         const query = { ...route.query };
-        delete query.objectid;
+        delete query.formid;
         router.push({ query });
     });
 
@@ -346,13 +346,13 @@ watch(
     },
 );
 
-watch(() => route.query.objectid, async (newObjectId) => {
-    if (newObjectId && view) {
+watch(() => route.query.formid, async (newFormId) => {
+    if (newFormId && view) {
         try {
             // Wait for view to be ready
             await view.when();
             
-            const feature = await findFeatureByObjectId(newObjectId);
+            const feature = await findFeatureByFormId(newFormId);
             if (feature) {
                 selectedFeature.value = feature;
                 popupData.value = {
@@ -364,7 +364,7 @@ watch(() => route.query.objectid, async (newObjectId) => {
                 await zoomToFeature(feature);
             }
         } catch (error) {
-            console.error("Error handling objectId change:", error);
+            console.error("Error handling formId change:", error);
         }
     }
 });
@@ -404,8 +404,8 @@ onMounted(async() => {
         initializeMapView();
     });
 
-    if (objectId) {
-        const feature = await findFeatureByObjectId(objectId);
+    if (formId) {
+        const feature = await findFeatureByFormId(formId);
         if (feature) {
             selectedFeature.value = feature;
             popupData.value = {
