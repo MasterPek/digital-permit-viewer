@@ -97,7 +97,7 @@ const filteredMenuItems = computed(() => {
 
 // Computed menu items with enriched Approval Status
 const menuItems = computed(() => {
-  console.log('accStore.items:', accStore.items); // Log the items from the store
+  console.log('accStore.items:', accStore.items);
 
   return accStore.items.map((item) => {
     if (item.form && item.form.customValues) {
@@ -107,7 +107,7 @@ const menuItems = computed(() => {
           field.itemLabel.toLowerCase() === 'approval status' &&
           field.valueName === 'choiceVal'
       );
-      console.log('Status field found:', statusField); // Log the status field
+      // console.log('Status field found:', statusField);
       return {
         ...item,
         approvalStatus: statusField ? statusField.choiceVal : null,

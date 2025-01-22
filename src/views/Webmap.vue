@@ -29,8 +29,6 @@ let webmap;
 const treeNodes = ref([]);
 const selectedNodes = ref({});
 
-const formId = route.query.formid;
-
 const isDrawerOpen = ref(false);
 
 const isRightDrawerOpen = ref(false);
@@ -38,6 +36,16 @@ const selectedForm = ref(null);
 
 const popupData = ref(null);
 const selectedFeature = ref(null);
+
+const countries = CountryService.getData();
+
+const countryCode = computed(() =>
+    esriConfig.portalUrl.split("-").pop().toUpperCase(),
+);
+const countryName = computed(() => {
+    const country = countries.find((c) => c.code === countryCode.value);
+    return country ? country.name : "Unknown";
+});
 
 const handleCloseDrawers = () => {
     isRightDrawerOpen.value = false; // Close DrawerWebmapRight
@@ -54,23 +62,151 @@ const handleFormSelected = (form) => {
     }
 };
 
-// Country Info
-const countries = CountryService.getData();
-const countryCode = computed(() =>
-    esriConfig.portalUrl.split("-").pop().toUpperCase(),
-);
-const countryName = computed(() => {
-    const country = countries.find((c) => c.code === countryCode.value);
-    return country ? country.name : "Unknown";
-});
+const handleShowArea = async (formId) => {
+    // console.log('formId parameter:', formId);
+    // console.log('route query formId:', route.query.formid);
+
+    if (formId && view) {
+        try {
+            // Wait for view to be ready
+            await view.when();
+
+            // Check if the formId parameter matches the route query formId
+            if (formId === route.query.formid) {
+                const feature = await findFeatureByFormId(formId);
+                if (feature) {
+                    // Set the selected feature and popup data
+                    selectedFeature.value = feature;
+                    popupData.value = {
+                        attributes: feature.attributes,
+                        layerName: feature.layer?.title,
+                        title: feature.layer?.popupTemplate?.title,
+                        content: feature.layer?.popupTemplate?.content
+                    };
+
+                    // Zoom to the feature
+                    await zoomToFeature(feature);
+                }
+            } else {
+                // Update the route with the new formId
+                await router.push({ query: { ...route.query, formid: formId } });
+                
+                // Now find and zoom to the feature with the new formId
+                const feature = await findFeatureByFormId(formId);
+                if (feature) {
+                    selectedFeature.value = feature;
+                    popupData.value = {
+                        attributes: feature.attributes,
+                        layerName: feature.layer?.title,
+                        title: feature.layer?.popupTemplate?.title,
+                        content: feature.layer?.popupTemplate?.content
+                    };
+
+                    await zoomToFeature(feature);
+                }
+            }
+        } catch (error) {
+            console.error("Error handling show area:", error);
+        }
+    }
+};
+
+const findFeatureByFormId = async (formId) => {
+    if (!webmap || !formId) {
+        console.warn('webmap or formId is missing.');
+        return null;
+    }
+
+    try {
+        await webmap.loadAll();
+
+        // Function to query a feature layer
+        const queryFeatureLayer = async (layer) => {
+            // console.log(`Querying feature layer: ${layer.title}`);
+
+            const query = {
+                where: `formid = '${formId}'`,
+                returnGeometry: true,
+                outFields: ["*"]
+            };
+            // console.log('Executing query:', query);
+
+            try {
+                const result = await layer.queryFeatures(query);
+                // console.log('Query result:', result);
+
+                if (result.features.length > 0) {
+                    const feature = result.features[0];
+                    console.log('Feature found:', feature);
+                    feature.layer = layer;
+                    return feature;
+                }
+                return null;
+            } catch (error) {
+                console.error(`Error querying layer ${layer.title}:`, error);
+                return null;
+            }
+        };
+
+        // Function to recursively search through layers
+        const searchLayers = async (layers) => {
+            for (const layer of layers) {
+                // console.log(`Checking layer: ${layer.title} (Type: ${layer.type})`);
+
+                if (layer.title === "PERMIT") {
+                    if (layer.type === "group") {
+                        // console.log('Found PERMIT group layer, searching sublayers...');
+                        // Load the group layer if it hasn't been loaded
+                        if (!layer.loaded) {
+                            await layer.load();
+                        }
+
+                        // Search through sublayers
+                        for (const sublayer of layer.layers.items) {
+                            // console.log(`Checking sublayer: ${sublayer.title} (Type: ${sublayer.type})`);
+
+                            if (sublayer.type === "feature") {
+                                const feature = await queryFeatureLayer(sublayer);
+                                if (feature) return feature;
+                            }
+                        }
+                    } else if (layer.type === "feature") {
+                        const feature = await queryFeatureLayer(layer);
+                        if (feature) return feature;
+                    }
+                }
+
+                // If the layer has sublayers, search through them
+                // if (layer.layers) {
+                //     const feature = await searchLayers(layer.layers.items);
+                //     if (feature) return feature;
+                // }
+            }
+            return null;
+        };
+
+        // Start the search from the webmap's layers
+        const feature = await searchLayers(webmap.layers.items);
+
+        if (!feature) {
+            console.warn('No feature found in any layer.');
+            toast.add({ severity: "warn", summary: "Feature Not Found", detail: "No feature found with the specified form ID", life: 3000});
+        }
+
+        return feature;
+    } catch (error) {
+        console.error('Error in findFeatureByFormId:', error);
+        return null;
+    }
+};
 
 const zoomToFeature = async (feature) => {
     if (!feature) return;
-    
+
     try {
         // Get the feature's geometry
         const geometry = feature.geometry;
-        
+
         if (geometry) {
             // Add padding and zoom to the feature
             await view.goTo({
@@ -90,33 +226,7 @@ const zoomToFeature = async (feature) => {
     }
 };
 
-// Function to find feature by ObjectID
-const findFeatureByFormId = async (formId) => {
-    if (!webmap || !formId) return null;
-
-    await webmap.load();
-    
-    // Loop through operational layers to find the feature
-    for (const layer of webmap.layers.items) {
-        if (layer.type === "feature") {
-            const query = layer.createQuery();
-            query.where = `formid = ${formId}`;
-            query.returnGeometry = true;
-            
-            try {
-                const result = await layer.queryFeatures(query);
-                if (result.features.length > 0) {
-                    return result.features[0];
-                }
-            } catch (error) {
-                console.error("Error querying features:", error);
-            }
-        }
-    }
-    return null;
-};
-
-const initializeMapView = () => {
+const initializeMapView = async () => {
     webmap = new WebMap({
         portalItem: { id: import.meta.env.VITE_ARCGIS_WEBMAP_ID },
         basemap: basemapStore.currentBasemapId,
@@ -131,34 +241,29 @@ const initializeMapView = () => {
     view.on("drag-end", () => (mapViewDiv.value.style.cursor = "default"));
     view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "default"));
 
-    view.on("click", (event) => {
-        view.hitTest(event).then((response) => {
-            const features = response.results?.filter(
-                (result) => result.graphic?.layer?.type !== "graphics"
-            );
-            
-            if (features && features.length > 0) {
-                const feature = features[0].graphic;
-                selectedFeature.value = feature;
-                popupData.value = {
-                    attributes: feature.attributes,
-                    layerName: feature.layer?.title,
-                    title: feature.layer?.popupTemplate?.title,
-                    content: feature.layer?.popupTemplate?.content
-                };
-                
-                // Update URL with ObjectID
-                const formId = feature.attributes.formid;
-                router.push({ 
-                    query: { ...route.query, formid: formId }
-                });
-                
-                // Zoom to feature
-                zoomToFeature(feature);
-                
-                console.log("Popup Data:", popupData.value);
-            }
-        });
+    view.on("click", async (event) => {
+        const response = await view.hitTest(event);
+        const features = response.results?.filter(
+            (result) => result.graphic?.layer?.type !== "graphics"
+        );
+
+        if (features && features.length > 0) {
+            const feature = features[0].graphic;
+            selectedFeature.value = feature;
+            popupData.value = {
+                attributes: feature.attributes,
+                layerName: feature.layer?.title,
+                title: feature.layer?.popupTemplate?.title,
+                content: feature.layer?.popupTemplate?.content
+            };
+
+            // Update URL with formid
+            const formId = feature.attributes.formid;
+            router.push({ query: { ...route.query, formid: formId } });
+
+            console.log('formid', popupData.value.attributes.formid);
+            console.log('popupData.value', popupData.value);
+        }
     });
 
     view.on("popup-close", () => {
@@ -170,7 +275,7 @@ const initializeMapView = () => {
         router.push({ query });
     });
 
-    view.when(
+    await view.when(
         () => {
             console.log("MapView loaded successfully");
             fetchAllLayers();
@@ -346,30 +451,29 @@ watch(
     },
 );
 
-watch(() => route.query.formid, async (newFormId) => {
-    if (newFormId && view) {
-        try {
-            // Wait for view to be ready
-            await view.when();
-            
-            const feature = await findFeatureByFormId(newFormId);
-            if (feature) {
-                selectedFeature.value = feature;
-                popupData.value = {
-                    attributes: feature.attributes,
-                    layerName: feature.layer?.title,
-                    title: feature.layer?.popupTemplate?.title,
-                    content: feature.layer?.popupTemplate?.content
-                };
-                await zoomToFeature(feature);
-            }
-        } catch (error) {
-            console.error("Error handling formId change:", error);
-        }
-    }
-});
+// watch(() => route.query.formid, async (newFormId) => {
+//     if (newFormId && view) {
+//         try {
+//             // Wait for view to be ready
+//             await view.when();
 
-// SpeedDial Commands
+//             const feature = await findFeatureByFormId(newFormId);
+//             if (feature) {
+//                 selectedFeature.value = feature;
+//                 popupData.value = {
+//                     attributes: feature.attributes,
+//                     layerName: feature.layer?.title,
+//                     title: feature.layer?.popupTemplate?.title,
+//                     content: feature.layer?.popupTemplate?.content
+//                 };
+//                 await zoomToFeature(feature);
+//             }
+//         } catch (error) {
+//             console.error("Error handling formId change:", error);
+//         }
+//     }
+// });
+
 const speedDialItems = ref([
     {
         label: "Street View",
@@ -399,14 +503,13 @@ const speedDialItems = ref([
     },
 ]);
 
-onMounted(async() => {
-    restoreCredentials().then(() => {
-        initializeMapView();
-    });
-
-    if (formId) {
-        const feature = await findFeatureByFormId(formId);
+onMounted(async () => {
+    await restoreCredentials();
+    await initializeMapView();
+    if (route.query.formid) {
+        const feature = await findFeatureByFormId(route.query.formid);
         if (feature) {
+            // Set the selected feature and popup data
             selectedFeature.value = feature;
             popupData.value = {
                 attributes: feature.attributes,
@@ -414,7 +517,9 @@ onMounted(async() => {
                 title: feature.layer?.popupTemplate?.title,
                 content: feature.layer?.popupTemplate?.content
             };
-            zoomToFeature(feature);
+
+            // Zoom to the feature
+            await zoomToFeature(feature);
         }
     }
 });
@@ -442,7 +547,8 @@ onMounted(async() => {
                             </div>
                         </template>
                     </DrawerWebmap>
-                    <DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm" />
+                    <DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm"
+                        @show-area="handleShowArea" />
                 </div>
             </div>
         </div>
