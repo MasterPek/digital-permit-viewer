@@ -37,15 +37,15 @@ const selectedForm = ref(null);
 const popupData = ref(null);
 const selectedFeature = ref(null);
 
-const countries = CountryService.getData();
+// const countries = CountryService.getData();
 
-const countryCode = computed(() =>
-    esriConfig.portalUrl.split("-").pop().toUpperCase(),
-);
-const countryName = computed(() => {
-    const country = countries.find((c) => c.code === countryCode.value);
-    return country ? country.name : "Unknown";
-});
+// const countryCode = computed(() =>
+//     esriConfig.portalUrl.split("-").pop().toUpperCase(),
+// );
+// const countryName = computed(() => {
+//     const country = countries.find((c) => c.code === countryCode.value);
+//     return country ? country.name : "Unknown";
+// });
 
 const handleCloseDrawers = () => {
     isRightDrawerOpen.value = false; // Close DrawerWebmapRight
@@ -527,17 +527,17 @@ onMounted(async () => {
 
 <template>
     <div class="grid grid-cols-12 relative">
-        <div class="col-span-12 relative w-full h-full">
+        <div class="col-span-12 relative w-full">
             <div>
-                <div class="mb-3 flex items-center justify-between">
+                <!-- <div class="mb-3 flex items-center justify-between">
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
-                </div>
-                <div ref="mapViewDiv" style="height: 90vh; width: 100%; position: relative; ">
+                </div> -->
+                <div ref="mapViewDiv" style="height: 94vh; width: 100%; position: relative; overflow: hidden;">
                     <SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
                         style="position: absolute; bottom: 25px; right: 10px" />
                     <DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
                         <template #default="{ drawerTitle }">
-                            <div v-if="drawerTitle === 'Layers'">
+                            <div v-if="drawerTitle === 'Layer'">
                                 <Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
                                     style="margin: 0; padding: 0" />
                             </div>

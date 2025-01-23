@@ -11,10 +11,10 @@
         <!-- Drawer Body -->
         <div class="drawer-body">
           <slot>
-            <div class="flex flex-col p-4 gap-4">
+            <div class="flex flex-col p-4 gap-2">
               <!-- Selected Form Mode: Show Approval Status and Permit Area -->
               <div class="flex flex-col gap-2">
-                <span class="font-medium text-xl">Approval Status</span>
+                <h3 class="font-medium text-xl">Approval Status</h3>
                 <span v-if="approvalStatus" :class="statusClass" class="text-xl">{{ approvalStatus }}</span>
                 <span v-else class="font-bold text-xl">Not Available</span>
               </div>
@@ -22,27 +22,38 @@
               <Divider />
               
               <div class="flex flex-col gap-3">
-                <span class="font-medium text-xl">Permit ID</span>
+                <h3 class="font-medium text-xl">Form ID</h3>
                 <span>{{ selectedForm?.id }}</span>
               </div>
 
+              
               <Divider />
               
+              <!-- TODO permit time section -->
               <div class="flex flex-col gap-3">
-                <span class="font-medium text-xl">Permit Area</span>
-                <div class="flex justify-center gap-4 px-4">
-                  <Button @click="showArea" icon="pi pi-search" label="Show Area" severity="info" outlined size="small" />
-                  <Button label="Print" icon="pi pi-file-pdf" outlined size="small" />
+                <h3 class="font-medium text-xl">Permit Time</h3>
+                <div class="flex gap-3">
+                  <div class="flex flex-col">
+                    <label class="font-medium">Actual Time</label>
+                    <DatePicker v-model="startDate" dateFormat="dd/mm/yy" disabled />
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="font-medium">Actual Finish</label>
+                    <DatePicker v-model="startDate" dateFormat="dd/mm/yy" disabled />
+                  </div>
                 </div>
               </div>
 
               <Divider />
               
-              <!-- TODO permit time section -->
               <div class="flex flex-col gap-3">
-                <span class="font-medium text-xl">Permit Time</span>
-                <span class="font-medium text-lg">Actual Time</span>
-                <DatePicker v-model="date" disabled />
+                <h3 class="font-medium text-xl">Permit Area</h3>
+                <div class="flex justify-center gap-4 px-4">
+                  <Button @click="showArea" icon="pi pi-search" label="Show Area" severity="info" outlined size="small" />
+                </div>
+              </div>
+              <div class="absolute bottom-0 right-0 p-4">
+                <Button label="Print" icon="pi pi-file-pdf" outlined />
               </div>
             </div>
           </slot>
@@ -80,6 +91,7 @@ const { templates, isLoading, error, activeTemplates } = storeToRefs(accTemplate
 const { fetchTemplates } = accTemplateStore;
 
 const selectedTemplate = ref(null);
+const startDate = ref()
 
 // Fetch templates when in "Add Permit" mode
 watch(

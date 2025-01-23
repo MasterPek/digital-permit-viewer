@@ -1,24 +1,24 @@
 <template>
   <div class="web-map-drawer-container">
     <!-- Trigger Buttons -->
-    <div class="drawer-trigger" @click="toggleDrawer('Layers')">
-      <button v-tooltip="'Layers'">
-        <span class="material-symbols-outlined text-red-400">
+    <div class="drawer-trigger" @click="toggleDrawer('Layer')">
+      <button v-tooltip="'Layer'" :class="{ 'active-drawer': isDrawerOpen && drawerTitle === 'Layer' }">
+        <span class="material-symbols-outlined text-3xl text-red-400">
           stacks
         </span>
       </button>
     </div>
     <div class="drawer-trigger" @click="toggleDrawer('Legend')">
-      <button v-tooltip="'Legend'">
-        <span class="material-symbols-outlined text-red-400">
+      <button v-tooltip="'Legend'" :class="{ 'active-drawer': isDrawerOpen && drawerTitle === 'Legend' }">
+        <span class="material-symbols-outlined text-3xl text-red-400">
           legend_toggle
         </span>
       </button>
     </div>
 
     <div class="drawer-trigger" @click="toggleDrawer('Permit')">
-      <button v-tooltip="'Permit'">
-        <span class="material-symbols-outlined text-red-400">
+      <button v-tooltip="'Permit'" :class="{ 'active-drawer': isDrawerOpen && drawerTitle === 'Permit' }">
+        <span class="material-symbols-outlined text-3xl text-red-400">
           license
         </span>
       </button>
@@ -93,7 +93,7 @@ watch(() => props.modelValue, (newValue) => {
   padding: 10px;
   background: var(--surface-card);
   height: 100%; 
-  width: 50px; 
+  width: 60px; 
   z-index: 10; /* Ensure it appears above the map */
   cursor: auto;
 }
@@ -102,13 +102,13 @@ watch(() => props.modelValue, (newValue) => {
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 5px;
+  padding: 5px 0 5px 0;
 }
 
 .web-map-drawer {
   position: absolute;
   top: 0;
-  left: 50px; /* Align next to the drawer container */
+  left: 60px; /* Align next to the drawer container */
   width: 40vw; /* Width of the drawer */
   max-width: 350px;
   height: 100%;
@@ -130,6 +130,8 @@ watch(() => props.modelValue, (newValue) => {
   justify-content: space-between;
   align-items: center;
   padding: 15px;
+  font-size: 1.5rem;
+  font-weight: 500;
   border-bottom: 1px solid var(--surface-border);
 }
 
@@ -141,6 +143,18 @@ watch(() => props.modelValue, (newValue) => {
 
 .close-button {
   margin-left: auto;
+}
+
+/* Style for the active drawer trigger button */
+.active-drawer {
+  display: flex;
+  align-items: center;
+  color: white; 
+  padding: 5px 20px 5px 20px; 
+}
+
+.active-drawer .material-symbols-outlined {
+  color: white; 
 }
 
 /* Responsive Adjustments */
