@@ -122,10 +122,10 @@ const statusClass = (status, type = 'class') => {
     Approved: { class: 'text-green-600', severity: 'success' },
     Pending: { class: 'text-yellow-600', severity: 'warn' },
     Rejected: { class: 'text-red-600', severity: 'danger' },
-    'On Hold': { class: 'text-orange-600', severity: 'info' },
+    'On Hold': { class: 'text-blue-600', severity: 'info' },
     'In Review': { class: 'text-blue-600', severity: 'info' },
     'Needs Revision': { class: 'text-blue-600', severity: 'info' },
-    default: { class: 'text-gray-600', severity: 'secondary' },
+    default: { class: 'text-white', severity: 'secondary' },
   };
 
   const result = statusMap[status] || statusMap.default;

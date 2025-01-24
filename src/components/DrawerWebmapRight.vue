@@ -4,7 +4,7 @@
       <div class="drawer-content">
         <!-- Drawer Header -->
         <div class="drawer-header">
-          <h2>{{ selectedForm?.name }}</h2>
+          <h1 class="text-xl">{{ selectedForm?.name }}</h1>
           <Button icon="pi pi-times" class="close-button" @click="closeDrawer" text rounded />
         </div>
 
@@ -34,12 +34,12 @@
                 <h3 class="font-medium text-xl">Permit Time</h3>
                 <div class="flex gap-3">
                   <div class="flex flex-col">
-                    <label class="font-medium">Actual Time</label>
-                    <DatePicker v-model="startDate" dateFormat="dd/mm/yy" disabled />
+                    <label class="font-medium">Actual Start</label>
+                    <DatePicker v-model="actualStart" dateFormat="dd/mm/yy" :placeholder="actualStart ? undefined : 'Date were not set'" disabled />
                   </div>
                   <div class="flex flex-col">
                     <label class="font-medium">Actual Finish</label>
-                    <DatePicker v-model="startDate" dateFormat="dd/mm/yy" disabled />
+                    <DatePicker v-model="actualFinish" dateFormat="dd/mm/yy" :placeholder="actualFinish ? undefined : 'Date were not set'" disabled />
                   </div>
                 </div>
               </div>
@@ -52,7 +52,7 @@
                   <Button @click="showArea" icon="pi pi-search" label="Show Area" severity="info" outlined size="small" />
                 </div>
               </div>
-              <div class="absolute bottom-0 right-0 p-4">
+              <div class="absolute bottom-2 right-0 p-4">
                 <Button label="Print" icon="pi pi-file-pdf" outlined />
               </div>
             </div>
@@ -91,7 +91,6 @@ const { templates, isLoading, error, activeTemplates } = storeToRefs(accTemplate
 const { fetchTemplates } = accTemplateStore;
 
 const selectedTemplate = ref(null);
-const startDate = ref()
 
 // Fetch templates when in "Add Permit" mode
 watch(
@@ -116,6 +115,32 @@ const approvalStatus = computed(() => {
   return statusField ? statusField.choiceVal : null;
 });
 
+const actualStart = computed(() => {
+  if (!props.selectedForm || !props.selectedForm.customValues) return null;
+
+  const statusField = props.selectedForm.customValues.find(
+    (field) =>
+      field.itemLabel &&
+      field.itemLabel.toLowerCase() === "actual start" &&
+      field.valueName === "dateVal"
+  );
+
+  return statusField ? statusField.dateVal : null;
+});
+
+const actualFinish = computed(() => {
+  if (!props.selectedForm || !props.selectedForm.customValues) return null;
+
+  const statusField = props.selectedForm.customValues.find(
+    (field) =>
+      field.itemLabel &&
+      field.itemLabel.toLowerCase() === "actual finish" &&
+      field.valueName === "dateVal"
+  );
+
+  return statusField ? statusField.dateVal : null;
+});
+
 const statusClass = computed(() => {
   switch (approvalStatus.value) {
     case 'Approved':
@@ -125,13 +150,13 @@ const statusClass = computed(() => {
     case 'Rejected':
       return 'text-red-600 font-bold'; // Red for Rejected
     case 'On Hold':
-      return 'text-orange-600 font-bold'; // Orange for On Hold
+      return 'text-blue-600 font-bold'; // Blue for On Hold
     case 'In Review':
       return 'text-blue-600 font-bold'; // Blue for In Review
     case 'Needs Revision':
-      return 'text-purple-600 font-bold'; // Purple for Needs Revision
+      return 'text-blue-600 font-bold'; // Blue for Needs Revision
     default:
-      return 'text-gray-600 font-bold'; // Gray for unknown statuses
+      return 'text-white font-bold'; // Gray for unknown statuses
   }
 });
 
