@@ -216,7 +216,7 @@ const zoomToFeature = async (feature) => {
                     right: 50,
                     bottom: 50,
                     left: 50
-                }
+                },
             }, {
                 duration: 1000  // Animation duration in milliseconds
             });

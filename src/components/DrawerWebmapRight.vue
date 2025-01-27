@@ -29,7 +29,6 @@
               
               <Divider />
               
-              <!-- TODO permit time section -->
               <div class="flex flex-col gap-3">
                 <h3 class="font-medium text-xl">Permit Time</h3>
                 <div class="flex gap-3">
@@ -93,14 +92,14 @@ const { fetchTemplates } = accTemplateStore;
 const selectedTemplate = ref(null);
 
 // Fetch templates when in "Add Permit" mode
-watch(
-  () => props.isAddPermitMode,
-  async (isAddPermitMode) => {
-    if (isAddPermitMode) {
-      await accTemplateStore.fetchTemplates();
-    }
-  }
-);
+// watch(
+//   () => props.isAddPermitMode,
+//   async (isAddPermitMode) => {
+//     if (isAddPermitMode) {
+//       await accTemplateStore.fetchTemplates();
+//     }
+//   }
+// );
 
 const approvalStatus = computed(() => {
   if (!props.selectedForm || !props.selectedForm.customValues) return null;
@@ -115,6 +114,15 @@ const approvalStatus = computed(() => {
   return statusField ? statusField.choiceVal : null;
 });
 
+function formatDateToDDMMYY(dateStr) {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear());
+  return `${day}/${month}/${year}`;
+}
+
 const actualStart = computed(() => {
   if (!props.selectedForm || !props.selectedForm.customValues) return null;
 
@@ -125,7 +133,7 @@ const actualStart = computed(() => {
       field.valueName === "dateVal"
   );
 
-  return statusField ? statusField.dateVal : null;
+  return statusField ? formatDateToDDMMYY(statusField.dateVal) : null;
 });
 
 const actualFinish = computed(() => {
@@ -138,8 +146,9 @@ const actualFinish = computed(() => {
       field.valueName === "dateVal"
   );
 
-  return statusField ? statusField.dateVal : null;
+  return statusField ? formatDateToDDMMYY(statusField.dateVal) : null;
 });
+
 
 const statusClass = computed(() => {
   switch (approvalStatus.value) {
