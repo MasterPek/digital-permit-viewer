@@ -146,15 +146,15 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 /* Style for the active drawer trigger button */
-.active-drawer {
+/* .active-drawer {
   display: flex;
   align-items: center;
   color: white; 
   padding: 5px 20px 5px 20px; 
-}
+} */
 
 .active-drawer .material-symbols-outlined {
-  color: white; 
+  color: var(--text-color); 
 }
 
 /* Responsive Adjustments */
