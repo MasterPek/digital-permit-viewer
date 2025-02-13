@@ -1,89 +1,100 @@
-import { accForms, accTemplateForms } from "@/service/acc.service";
+import { accForms, accMe, accTemplateForms } from "@/service/acc.service";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
-export const useAccFormStore = defineStore("acc", () => {
-    const forms = ref([]);
-    const items = ref([]);
-    const selectedForm = ref(null);
+export const useAccStore = defineStore("accStore", {
+    state: () => ({
+        user: null,
+        forms: [],
+        items: [],
+        selectedForm: null,
+    }),
 
-    const fetchForms = async () => {
-        try {
-            const res = await accForms();
-            const data = await res.json();
-            forms.value = data.data;
+    actions: {
+        async fetchUsers() {
+          // if (this.user) return
 
-            items.value = forms.value.map((form) => ({
-                label: form.name,
-                form: form,
-                command: () => {
-                    setSelectedForm(form);
-                },
-            }));
+            const res = await accMe();
 
-            return data;
-        } catch (error) {
-            console.error("Error fetching forms:", error);
-        }
-    };
+            if (res.ok) {
+                const data = await res.json();
+                this.user = data;
+              }
+        },
+        async fetchForms() {
+            try {
+                const res = await accForms();
+                const data = await res.json();
+                this.forms = data.data;
 
-    const setSelectedForm = (form) => {
-        selectedForm.value = form;
-        console.log("Selected form:", form);
-    };
+                this.items = this.forms.map((form) => ({
+                    label: form.name,
+                    form: form,
+                    command: () => {
+                        this.setSelectedForm(form);
+                    },
+                }));
 
-    return {
-        forms,
-        items,
-        selectedForm,
-        fetchForms,
-        setSelectedForm,
-    };
+                return data;
+            } catch (error) {
+                console.error("Error fetching forms:", error);
+            }
+        },
+
+        setSelectedForm(form) {
+            this.selectedForm = form;
+            console.log("Selected form:", form);
+        },
+    },
 });
 
 export const useAccTemplateStore = defineStore("accTemplate", () => {
-  // State
-  const templates = ref([]);
-  const isLoading = ref(false);
-  const error = ref(null);
+    // State
+    const templates = ref([]);
+    const isLoading = ref(false);
+    const error = ref(null);
 
-  // Actions
-  const fetchTemplates = async () => {
-    isLoading.value = true;
-    error.value = null;
+    // Actions
+    const fetchTemplates = async () => {
+        isLoading.value = true;
+        error.value = null;
 
-    try {
-      const response = await accTemplateForms();
+        try {
+            const response = await accTemplateForms();
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch templates: ${response.statusText}`);
-      }
+            if (!response.ok) {
+                throw new Error(
+                    `Failed to fetch templates: ${response.statusText}`,
+                );
+            }
 
-      const data = await response.json();
+            const data = await response.json();
 
-      if (data?.data) {
-        templates.value = data.data;
-      } else {
-        throw new Error("Invalid data format received from the API");
-      }
-    } catch (err) {
-      error.value = err.message;
-      console.error("Failed to fetch templates:", err);
-    } finally {
-      isLoading.value = false;
-    }
-  };
+            if (data?.data) {
+                templates.value = data.data;
+            } else {
+                throw new Error("Invalid data format received from the API");
+            }
+        } catch (err) {
+            error.value = err.message;
+            console.error("Failed to fetch templates:", err);
+        } finally {
+            isLoading.value = false;
+        }
+    };
 
-  // Getters (optional)
-  const activeTemplates = computed(() => {
-    return templates.value.filter((template) => template.status === "active");
-  });
+    // Getters (optional)
+    const activeTemplates = computed(() => {
+        return templates.value.filter(
+            (template) => template.status === "active",
+        );
+    });
 
-  return {
-    templates,
-    isLoading,
-    error,
-    fetchTemplates,
-    activeTemplates,
-  };
+    return {
+        templates,
+        isLoading,
+        error,
+        fetchTemplates,
+        activeTemplates,
+    };
 });

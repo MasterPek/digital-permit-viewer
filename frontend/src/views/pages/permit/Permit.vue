@@ -1,4 +1,5 @@
 <template>
+  <div>
   <div class="topbar">
     <div>
       <Button icon="pi pi-filter" text @click="toggle" v-tooltip="'Filter'" />
@@ -12,7 +13,7 @@
           <!-- Icon -->
           <div class="flex flex-col w-full">
             <span :class="[{ 'font-semibold': item.items }]">{{ item.label }}</span>
-  
+
             <div class="flex justify-between items-center">
               <Tag v-if="item.approvalStatus" :severity="statusClass(item.approvalStatus, 'severity')" class="text-sm">
                 {{ item.approvalStatus }}
@@ -30,13 +31,8 @@
   </div>
   <Popover ref="op">
     <div class="grid grid-cols-2">
-      <Tag
-      class="cursor-pointer m-2"
-      :severity="statusClass(status, 'severity')"
-        v-for="status in statusOptions"
-        :key="status"
-        @click="selectStatus(status)"
-      >{{ status }}</Tag>
+      <Tag class="cursor-pointer m-2" :severity="statusClass(status, 'severity')" v-for="status in statusOptions"
+        :key="status" @click="selectStatus(status)">{{ status }}</Tag>
 
       <Divider class="col-span-2" />
 
@@ -45,14 +41,15 @@
       </div>
     </div>
   </Popover>
+</div>
 </template>
 
 <script setup>
-import { accAccount, accMe } from '@/service/acc.service';
-import { useAccFormStore } from '@/store/accStore';
+import { accAccount } from '@/service/acc.service';
+import { useAccStore } from '@/store/accStore';
 import { onMounted, ref, computed, watch } from 'vue';
 
-const accStore = useAccFormStore();
+const accStore = useAccStore();
 
 const emit = defineEmits(['formSelected']);
 
@@ -64,7 +61,7 @@ const selectedStatus = ref(null);
 const statusOptions = ref([]);
 
 const toggle = (event) => {
-    op.value.toggle(event);
+  op.value.toggle(event);
 }
 
 // Select a status and filter the menu items
@@ -144,13 +141,10 @@ watch(
   { immediate: false }
 );
 
-const fetchMe = async () => {
+const avatar = async () => {
   try {
-    const response = await accMe();
-    const data = await response.json();
-
-    const firstName = data.firstName || '';
-    const lastName = data.lastName || '';
+    const firstName = accStore.user?.firstName || '';
+    const lastName = accStore.user?.lastName || '';
 
     avatarLabel.value = `${firstName.charAt(0)}${lastName.charAt(0)}`;
     avatarTooltip.value = `${firstName} ${lastName}`;
@@ -164,20 +158,21 @@ const loadForms = async () => {
   fetchStatusOptions();
 };
 
+
 const fetchAccountId = () => {
   try {
     const res = accAccount();
- 
-    console.log('cehk',res);
+
+    console.log('cehk', res);
   } catch (error) {
-    console.log('error',error);
+    console.log('error', error);
   }
 }
 
-onMounted(() => {
-  fetchMe();
+onMounted(async() => {
+  await avatar();
   loadForms();
-  fetchAccountId();
+  // fetchAccountId();
 });
 </script>
 

@@ -24,10 +24,9 @@ export default defineConfig({
     server: {
         proxy: {
             "/api": {
-                target: "https://developer.api.autodesk.com",
+                target: "http://localhost:3000",
                 changeOrigin: true,
                 secure: false, // Disable if the API uses self-signed certificates
-                rewrite: (path) => path.replace(/^\/api/, ""),
             },
         },
     },

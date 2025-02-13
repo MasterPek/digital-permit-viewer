@@ -87,8 +87,8 @@ watch(() => props.modelValue, (newValue) => {
 
 <style scoped>
 .web-map-drawer-container {
-  position: absolute; 
-  top: 0;
+  position: fixed; 
+  top: 10;
   left: 0;
   padding: 10px;
   background: var(--surface-card);

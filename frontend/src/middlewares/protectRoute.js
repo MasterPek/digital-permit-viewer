@@ -12,7 +12,7 @@ const fetchWithRetry = async (url, options = {}) => {
     });
 
     // If the response status is 401, refresh the token and retry the request
-    if (response.status === 401) {
+    if (!response.ok) {
       console.warn("Token expired or invalid. Refreshing token...");
 
       const newToken = await accRefreshToken();
