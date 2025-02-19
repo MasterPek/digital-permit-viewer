@@ -33,7 +33,7 @@ const form = multer()
 server.use("/api", form.none(), router);
 
 // Start Server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3004;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

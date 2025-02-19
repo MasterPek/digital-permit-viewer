@@ -1,7 +1,7 @@
 import { ACC_ENDPOINTS, accClientId, accClientSecret, redirectUri } from "@/constants/acc.constant";
 import { AUTH_HEADERS, FORM_URLENCODED_HEADERS } from "@/constants/headers.constant";
 import METHOD from "@/constants/http-method.constant";
-import fetchWithRetry from "@/middlewares/protectRoute";
+import accFetch from "@/utils/acc.util";
 import { getAccCookie, setAccCookie } from "@/utils/accCookie";
 import { accToken } from "@/utils/token";
 
@@ -101,7 +101,7 @@ export const accRefreshToken = async () => {
 
 export const accMe = async () => {
   try {
-    return await fetchWithRetry(ACC_ENDPOINTS.ACC_ME, {
+    return await accFetch(ACC_ENDPOINTS.ACC_ME, {
       method: METHOD.GET,
     });
 
@@ -113,7 +113,7 @@ export const accMe = async () => {
 
 export const accTemplateForms = async () => {
   try {
-    const response = await fetchWithRetry(ACC_ENDPOINTS.ACC_TEMPLATE_FORMS, {
+    const response = await accFetch(ACC_ENDPOINTS.ACC_TEMPLATE_FORMS, {
       method: METHOD.GET,
     });
 
@@ -123,12 +123,13 @@ export const accTemplateForms = async () => {
   }
 }
 
-export const accForms = async () => {
+export const accForms = async (offset = 0, limit = 50) => {
   try {
-    return await fetchWithRetry(ACC_ENDPOINTS.ACC_FORMS, {
+    const url = `${ACC_ENDPOINTS.ACC_FORMS}?offset=${offset}&limit=${limit}`;
+
+    return await accFetch(url, {
       method: METHOD.GET,
     });
-
   } catch (error) {
     console.error("Error in accForms:", error);
   }

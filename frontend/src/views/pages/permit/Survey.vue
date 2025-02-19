@@ -11,7 +11,7 @@ import { onMounted, ref } from 'vue';
 
 const testUser = ref(null);
 const fetchUsers = async () => {
-  const res = await fetch('/api/users', {
+  const res = await fetch('/dpapi/annotations/', {
     headers: {
       Accept: 'application/json'
     }

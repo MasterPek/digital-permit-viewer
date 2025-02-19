@@ -1,7 +1,14 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout';
+import { ref } from 'vue';
 
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
+
+const projects = ref([
+    { id: 1, name: 'QTMP - Test Project' },
+])
+
+const selectedProject = ref(projects.value.find((project) => project.id === 1));
 </script>
 
 <template>
@@ -10,13 +17,16 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
             <button class="layout-menu-button layout-topbar-action" @click="onMenuToggle">
                 <i class="pi pi-bars"></i>
             </button>
-            <router-link to="/" class="layout-topbar-logo">
+            <router-link :to="{name: 'survey-layer'}" class="layout-topbar-logo">
                 <div>
                     <img src="/demo/images/gamuda.png" class="rounded-xl" alt="" height="35px" width="35px">
                 </div>
 
                 <span class="text-lg sm:text-base md:text-xl">Digital Permit</span>
             </router-link>
+        </div>
+        <div class="flex justify-center gap-4">
+            <Select v-model="selectedProject" :options="projects" optionLabel="name" placeholder="Select a Project" variant="filled" />
         </div>
 
         <div class="layout-topbar-actions">

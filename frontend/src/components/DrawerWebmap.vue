@@ -8,13 +8,13 @@
         </span>
       </button>
     </div>
-    <div class="drawer-trigger" @click="toggleDrawer('Legend')">
+    <!-- <div class="drawer-trigger" @click="toggleDrawer('Legend')">
       <button v-tooltip="'Legend'" :class="{ 'active-drawer': isDrawerOpen && drawerTitle === 'Legend' }">
         <span class="material-symbols-outlined text-3xl text-red-400">
           legend_toggle
         </span>
       </button>
-    </div>
+    </div> -->
 
     <div class="drawer-trigger" @click="toggleDrawer('Permit')">
       <button v-tooltip="'Permit'" :class="{ 'active-drawer': isDrawerOpen && drawerTitle === 'Permit' }">
@@ -137,7 +137,7 @@ watch(() => props.modelValue, (newValue) => {
 
 .drawer-body {
   flex-grow: 1;
-  overflow-y: auto;
+  overflow: hidden;
   /* padding: 15px; */
 }
 

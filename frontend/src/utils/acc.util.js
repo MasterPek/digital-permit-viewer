@@ -1,7 +1,7 @@
 import { accRefreshToken } from "@/service/acc.service";
 import { accToken } from "@/utils/token";
 
-const fetchWithRetry = async (url, options = {}) => {
+const accFetch = async (url, options = {}) => {
   try {
     const response = await fetch(url, {
       ...options,
@@ -39,4 +39,4 @@ const fetchWithRetry = async (url, options = {}) => {
   }
 };
 
-export default fetchWithRetry;
+export default accFetch;

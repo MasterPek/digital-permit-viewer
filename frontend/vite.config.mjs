@@ -23,10 +23,13 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            "/api": {
-                target: "http://localhost:3000",
+            "/dpapi": {
+                target: "https://vertex.gamuda.com.my",
                 changeOrigin: true,
                 secure: false, // Disable if the API uses self-signed certificates
+                headers: {
+                    Accept: "application/json",
+                }
             },
         },
     },

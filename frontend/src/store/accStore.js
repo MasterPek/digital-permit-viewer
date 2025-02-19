@@ -8,24 +8,37 @@ export const useAccStore = defineStore("accStore", {
         forms: [],
         items: [],
         selectedForm: null,
+        pagination: {
+            offset: 0,
+            limit: 50,
+            totalResults: 0,
+        },
+        loading: false,
     }),
 
     actions: {
         async fetchUsers() {
-          // if (this.user) return
-
             const res = await accMe();
 
             if (res.ok) {
                 const data = await res.json();
                 this.user = data;
-              }
+            }
         },
-        async fetchForms() {
+        async fetchForms(isLoadMore = false) {
+            if (this.loading) return;
+            this.loading = true;
+
             try {
-                const res = await accForms();
+                const { offset, limit } = this.pagination;
+                const res = await accForms(offset, limit);
                 const data = await res.json();
-                this.forms = data.data;
+
+                if (isLoadMore) {
+                    this.forms.push(...data.data);
+                } else {
+                    this.forms = data.data;
+                }
 
                 this.items = this.forms.map((form) => ({
                     label: form.name,
@@ -35,9 +48,13 @@ export const useAccStore = defineStore("accStore", {
                     },
                 }));
 
-                return data;
+                // Update Pagination
+                this.pagination.offset += limit;
+                this.pagination.totalResults = data.pagination.totalResults;
             } catch (error) {
                 console.error("Error fetching forms:", error);
+            } finally {
+                this.loading = false;
             }
         },
 
@@ -51,12 +68,12 @@ export const useAccStore = defineStore("accStore", {
 export const useAccTemplateStore = defineStore("accTemplate", () => {
     // State
     const templates = ref([]);
-    const isLoading = ref(false);
+    const loading = ref(false);
     const error = ref(null);
 
     // Actions
     const fetchTemplates = async () => {
-        isLoading.value = true;
+        loading.value = true;
         error.value = null;
 
         try {
@@ -79,7 +96,7 @@ export const useAccTemplateStore = defineStore("accTemplate", () => {
             error.value = err.message;
             console.error("Failed to fetch templates:", err);
         } finally {
-            isLoading.value = false;
+            loading.value = false;
         }
     };
 
@@ -92,7 +109,7 @@ export const useAccTemplateStore = defineStore("accTemplate", () => {
 
     return {
         templates,
-        isLoading,
+        loading,
         error,
         fetchTemplates,
         activeTemplates,
