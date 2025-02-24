@@ -11,8 +11,8 @@ import { CountryService } from "@/service/CountryService";
 import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
-import DrawerWebmapRight from "@/components/DrawerWebmapRight.vue";
-import DrawerWebmap from "@/components/DrawerWebmap.vue";
+import DrawerWebmapRight from "@/layout/DrawerWebmapRight.vue";
+import DrawerWebmap from "@/layout/DrawerWebmap.vue";
 import AuthACC from "./auth/AuthACC.vue";
 import { arcGisClientId, arcGisPortalUrl, arcGisRedirectUri } from "@/constants/arcgis.constant";
 import { restoreCredentials } from "@/service/arcgis.service";
@@ -356,7 +356,6 @@ onMounted(async () => {
                                 <Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
                                     style="margin: 0; padding: 0" />
                             </div>
-                            <!-- TODO: ask for arcgis server does it have api-key to access -->
                             <div class="h-full" v-else-if="drawerTitle === 'Permit'">
                                 <AuthACC @formSelected="handleFormSelected" @addPermit="handleAddPermit" />
                             </div>

@@ -7,7 +7,8 @@ import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
 import AuthACC from "./pages/auth/AuthACC.vue";
-import DrawerWebmapRight from "@/components/DrawerWebmapRight.vue";
+import DrawerWebmap from "@/layout/DrawerWebmap.vue";
+import DrawerWebmapRight from "@/layout/DrawerWebmapRight.vue";
 import { restoreCredentials } from "@/service/arcgis.service";
 import { useRoute, useRouter } from "vue-router";
 import { fastapiPermitAnnotations } from "@/service/fastapi.service";
@@ -64,7 +65,11 @@ const handleFormSelected = (form) => {
 
 const handleShowArea = async (formId) => {
 	// console.log('formId parameter:', formId);
-	// console.log('route query formId:', route.query.formid);
+
+	// Ensure formId is enclosed in {}
+	if (typeof formId === "string" && !formId.startsWith("{")) {
+		formId = `{${formId.replace(/{|}/g, "").toUpperCase()}}`; // Add {} if missing
+	}
 
 	if (formId && view) {
 		try {
@@ -153,7 +158,7 @@ const findFeatureByFormId = async (formId) => {
 			for (const layer of layers) {
 				// console.log(`Checking layer: ${layer.title} (Type: ${layer.type})`);
 
-				if (layer.title === "PERMIT") {
+				if (layer.title === "Digital Permit") {
 					if (layer.type === "group") {
 						// console.log('Found PERMIT group layer, searching sublayers...');
 						// Load the group layer if it hasn't been loaded
@@ -540,13 +545,13 @@ onMounted(async () => {
 				<div ref="mapViewDiv" style="height: 94vh; width: 100%; position: relative; overflow: hidden;">
 					<SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
 						style="position: absolute; bottom: 25px; right: 10px" />
-					<DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
+					<DrawerWebmap
+					v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
 						<template #default="{ drawerTitle }">
 							<div v-if="drawerTitle === 'Layer'">
 								<Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
 									style="margin: 0; padding: 0" />
 							</div>
-							<!-- TODO: ask for arcgis server does it have api-key to access -->
 							<div class="h-full" v-else-if="drawerTitle === 'Permit'">
 								<AuthACC @formSelected="handleFormSelected" />
 							</div>

@@ -1,0 +1,185 @@
+├── .gitignore
+├── .vscode
+│  ├── extensions.json
+│  └── settings.json
+├── backend
+│  ├── .env
+│  ├── .gitignore
+│  ├── nodemon.json
+│  ├── package-lock.json
+│  ├── package.json
+│  ├── prisma
+│  │  ├── migrations
+│  │  │  ├── 20250213080121_init
+│  │  │  │  └── migration.sql
+│  │  │  └── migration_lock.toml
+│  │  └── schema.prisma
+│  ├── src
+│  │  ├── controller
+│  │  │  ├── AuthController.ts
+│  │  │  └── UserController.ts
+│  │  ├── db
+│  │  │  ├── prisma.ts
+│  │  │  └── seeder
+│  │  ├── index.ts
+│  │  └── router
+│  │    └── index.ts
+│  └── tsconfig.json
+└── frontend
+  ├── .editorconfig
+  ├── .env
+  ├── .env.example
+  ├── .eslintrc.cjs
+  ├── index.html
+  ├── jsconfig.json
+  ├── LICENSE.md
+  ├── package-lock.json
+  ├── package.json
+  ├── postcss.config.js
+  ├── public
+  │  └── demo
+  │    ├── data
+  │    │  ├── countries.json
+  │    │  ├── customers-large.json
+  │    │  ├── customers-medium.json
+  │    │  ├── events.json
+  │    │  ├── icons.json
+  │    │  ├── photos.json
+  │    │  ├── products-orders-small.json
+  │    │  ├── products-small.json
+  │    │  ├── products.json
+  │    │  ├── treenodes.json
+  │    │  └── treetablenodes.json
+  │    └── images
+  │      ├── access
+  │      │  └── asset-access.svg
+  │      ├── error
+  │      │  └── asset-error.svg
+  │      ├── flag
+  │      │  └── flag_placeholder.png
+  │      ├── gamuda.png
+  │      ├── landing
+  │      │  ├── enterprise.svg
+  │      │  ├── free.svg
+  │      │  ├── mockup-desktop.svg
+  │      │  ├── mockup.svg
+  │      │  ├── new-badge.svg
+  │      │  ├── peak-logo.svg
+  │      │  ├── screen-1.png
+  │      │  └── startup.svg
+  │      ├── logo-white.svg
+  │      └── logo.svg
+  ├── README.md
+  ├── src
+  │  ├── App.vue
+  │  ├── assets
+  │  │  ├── demo
+  │  │  │  ├── code.scss
+  │  │  │  ├── demo.scss
+  │  │  │  └── flags
+  │  │  │    ├── flags_responsive.png
+  │  │  │    └── flags.css
+  │  │  ├── layout
+  │  │  │  ├── _core.scss
+  │  │  │  ├── _drawer.scss
+  │  │  │  ├── _footer.scss
+  │  │  │  ├── _main.scss
+  │  │  │  ├── _menu.scss
+  │  │  │  ├── _mixins.scss
+  │  │  │  ├── _preloading.scss
+  │  │  │  ├── _responsive.scss
+  │  │  │  ├── _topbar.scss
+  │  │  │  ├── _typography.scss
+  │  │  │  ├── _utils.scss
+  │  │  │  ├── layout.scss
+  │  │  │  └── variables
+  │  │  │    ├── _common.scss
+  │  │  │    ├── _dark.scss
+  │  │  │    └── _light.scss
+  │  │  ├── styles.scss
+  │  │  └── tailwind.css
+  │  ├── components
+  │  │  ├── DrawerWebmap.vue
+  │  │  ├── DrawerWebmapRight.vue
+  │  │  └── FloatingConfigurator.vue
+  │  ├── composables
+  │  │  └── useBasemapSwitch.js
+  │  ├── constants
+  │  │  ├── acc.constant.js
+  │  │  ├── arcgis.constant.js
+  │  │  ├── fastapi.constant.js
+  │  │  ├── headers.constant.js
+  │  │  └── http-method.constant.js
+  │  ├── layout
+  │  │  ├── AppConfigurator.vue
+  │  │  ├── AppFooter.vue
+  │  │  ├── AppLayout.vue
+  │  │  ├── AppMenu.vue
+  │  │  ├── AppMenuItem.vue
+  │  │  ├── AppSidebar.vue
+  │  │  ├── AppTopbar.vue
+  │  │  └── composables
+  │  │    └── layout.js
+  │  ├── main.js
+  │  ├── middlewares
+  │  ├── router
+  │  │  └── index.js
+  │  ├── service
+  │  │  ├── acc.service.js
+  │  │  ├── arcgis.service.js
+  │  │  ├── CountryService.js
+  │  │  ├── CustomerService.js
+  │  │  ├── fastapi.service.js
+  │  │  ├── NodeService.js
+  │  │  ├── PhotoService.js
+  │  │  └── ProductService.js
+  │  ├── store
+  │  │  ├── accStore.js
+  │  │  └── basemapStore.js
+  │  ├── utils
+  │  │  ├── acc.util.js
+  │  │  ├── accCookie.js
+  │  │  ├── basemap.js
+  │  │  └── token.js
+  │  └── views
+  │    ├── pages
+  │    │  ├── auth
+  │    │  │  ├── Access.vue
+  │    │  │  ├── AuthACC.vue
+  │    │  │  ├── CallBackACC.vue
+  │    │  │  ├── CallBackArcGis.vue
+  │    │  │  ├── Error.vue
+  │    │  │  └── Login.vue
+  │    │  ├── Crud.vue
+  │    │  ├── Documentation.vue
+  │    │  ├── Drag.vue
+  │    │  ├── Empty.vue
+  │    │  ├── Landing.vue
+  │    │  ├── NotFound.vue
+  │    │  ├── permit
+  │    │  │  ├── Permit.vue
+  │    │  │  └── Survey.vue
+  │    │  └── WebmapTest.vue
+  │    ├── uikit
+  │    │  ├── ButtonDoc.vue
+  │    │  ├── ChartDoc.vue
+  │    │  ├── FileDoc.vue
+  │    │  ├── FormLayout.vue
+  │    │  ├── InputDoc.vue
+  │    │  ├── ListDoc.vue
+  │    │  ├── MediaDoc.vue
+  │    │  ├── MenuDoc.vue
+  │    │  ├── MessagesDoc.vue
+  │    │  ├── MiscDoc.vue
+  │    │  ├── OverlayDoc.vue
+  │    │  ├── PanelsDoc.vue
+  │    │  ├── TableDoc.vue
+  │    │  ├── TimelineDoc.vue
+  │    │  └── TreeDoc.vue
+  │    └── Webmap.vue
+  ├── tailwind.config.js
+  ├── tests
+  │  └── Survey.spec.js
+  ├── vercel.json
+  ├── vite.config.mjs
+  └── vitest.config.js

@@ -125,7 +125,7 @@ export const accTemplateForms = async () => {
 
 export const accForms = async (offset = 0, limit = 50) => {
   try {
-    const url = `${ACC_ENDPOINTS.ACC_FORMS}?offset=${offset}&limit=${limit}`;
+    const url = `${ACC_ENDPOINTS.ACC_FORMS}?offset=${offset}&limit=${limit}&sortOrder=desc`;
 
     return await accFetch(url, {
       method: METHOD.GET,

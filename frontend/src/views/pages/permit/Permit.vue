@@ -13,7 +13,8 @@
             <div class="flex flex-col w-full">
               <span :class="[{ 'font-semibold': item.items }]">{{ item.label }}</span>
               <div class="flex justify-between items-center">
-                <Tag v-if="item.approvalStatus" :severity="statusClass(item.approvalStatus, 'severity')" class="text-sm">
+                <Tag v-if="item.approvalStatus" :severity="statusClass(item.approvalStatus, 'severity')"
+                  class="text-sm">
                   {{ item.approvalStatus }}
                 </Tag>
                 <Tag severity="secondary" class="text-sm" v-else>
@@ -25,20 +26,27 @@
           </a>
         </template>
       </PanelMenu>
-      <p v-if="loading" class="text-center">Loading more...</p>
+      <div v-if="loading" class="text-center">
+        <i class="pi pi-spin pi-spinner"></i>
+      </div>
       <p v-if="noMoreItems" class="text-center text-gray-500 my-4">No more items to load</p>
     </div>
     <Popover ref="op">
-      <div class="grid grid-cols-2">
+      <div v-if="statusOptions.length > 0" class="grid grid-cols-2">
         <Tag class="cursor-pointer m-2" :severity="statusClass(status, 'severity')" v-for="status in statusOptions"
-          :key="status" @click="selectStatus(status)">{{ status }}</Tag>
+          :key="status" @click="selectStatus(status)">
+          {{ status }}
+        </Tag>
 
         <Divider class="col-span-2" />
 
         <div class="col-span-2 flex justify-end">
-          <Button label="Clear" severity="secondary" text @click="selectStatus(null)" />
+          <Button label="Clear" severity="secondary" text @click="clearFilters" />
         </div>
       </div>
+
+      <!-- Debugging: Show a message if there are no status options -->
+      <p v-else class="text-center text-gray-500">No status options available</p>
     </Popover>
   </div>
 </template>
@@ -46,7 +54,7 @@
 <script setup>
 import { accAccount } from '@/service/acc.service';
 import { useAccStore } from '@/store/accStore';
-import { onMounted, ref, computed, watch } from 'vue';
+import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
 
 const accStore = useAccStore();
 const scrollContainer = ref(null);
@@ -66,39 +74,74 @@ const toggle = (event) => {
   op.value.toggle(event);
 };
 
+// Clear filters - reset store and reload
+const clearFilters = async () => {
+  selectedStatus.value = null;
+  op.value.hide();
+  
+  // Reset store pagination
+  accStore.pagination.offset = 0;
+  
+  // Clear existing items to prevent duplication
+  accStore.items = [];
+  
+  // Reload forms from the beginning
+  loading.value = true;
+  try {
+    await accStore.fetchForms();
+    fetchStatusOptions();
+  } finally {
+    loading.value = false;
+  }
+};
+
 // Select a status and filter the menu items
 const selectStatus = (status) => {
   selectedStatus.value = status;
   op.value.hide();
-  
-  // Reset pagination when applying a new filter
-  if (accStore.pagination.offset > accStore.pagination.limit) {
-    accStore.pagination.offset = accStore.pagination.limit;
-  }
-  
-  // Check if we need to load more filtered items
-  checkIfMoreItemsNeeded();
 };
 
 const fetchStatusOptions = () => {
-  if (accStore.items.length > 0 && accStore.items[0].form?.customValues) {
-    const statusField = accStore.items[0].form.customValues.find(
-      (field) =>
-        field.itemLabel?.toLowerCase() === 'approval status' &&
-        field.valueName === 'choiceVal'
-    );
+  let allCustomValues = accStore.items.flatMap(item => item.form?.customValues || []);
+  
+  const statusField = allCustomValues.find(
+    (field) =>
+      field.itemLabel?.toLowerCase() === 'approval status' &&
+      field.valueName === 'choiceVal'
+  );
 
-    if (statusField?.valueOptions) {
-      statusOptions.value = statusField.valueOptions;
-    }
+  if (statusField?.valueOptions) {
+    statusOptions.value = statusField.valueOptions;
   }
 };
 
+// const fetchStatusOptions = () => {
+//   if (accStore.items.length > 0 && accStore.items[0].form?.customValues) {
+//     console.log('custom values', accStore.items[0].form.customValues);
+
+//     const statusField = accStore.items[0].form.customValues.find(
+//       (field) =>
+//         field.itemLabel?.toLowerCase() === 'approval status' &&
+//         field.valueName === 'choiceVal'
+//     );
+
+//     if (statusField?.valueOptions) {
+//       statusOptions.value = statusField.valueOptions;
+//       console.log("statusOptions:", statusOptions.value);
+//     }
+//   }
+// };
+
 const filteredMenuItems = computed(() => {
-  if (!selectedStatus.value) return menuItems.value;
+  if (!selectedStatus.value) {
+    return menuItems.value.filter((item) => item.label.toLowerCase().includes("permit"));
+  }
 
   return menuItems.value.filter((item) => {
-    return item.approvalStatus === selectedStatus.value;
+    return (
+      item.approvalStatus === selectedStatus.value &&
+      item.label.toLowerCase().includes("permit")
+    );
   });
 });
 
@@ -124,11 +167,11 @@ const menuItems = computed(() => {
 // Check if more items should be loaded based on current filter
 const checkIfMoreItemsNeeded = () => {
   if (!scrollContainer.value) return;
-  
+
   const container = scrollContainer.value;
   const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 300;
   
-  // If we're near the bottom and filter is active with few results, load more
+  // If filtered results are low, try to load more
   if (isNearBottom && filteredMenuItems.value.length < 10 && !loading.value) {
     if (accStore.pagination.offset < accStore.pagination.totalResults) {
       loadMoreItems();
@@ -150,14 +193,10 @@ const handleScroll = (event) => {
 const loadMoreItems = async () => {
   if (loading.value) return;
   loading.value = true;
-  
+
   try {
     await accStore.fetchForms(true);
-    
-    // After loading more items, check if we still need more (for filtered views)
-    if (selectedStatus.value && filteredMenuItems.value.length < 10) {
-      checkIfMoreItemsNeeded();
-    }
+    fetchStatusOptions();
     
     if (accStore.pagination.offset >= accStore.pagination.totalResults) {
       noMoreItems.value = true;
@@ -192,7 +231,7 @@ watch(
   { immediate: false }
 );
 
-// Watch for filter changes to check if more items are needed
+// Watch for filter status changes to check if more items are needed
 watch(
   () => selectedStatus.value,
   () => {
@@ -200,6 +239,15 @@ watch(
       checkIfMoreItemsNeeded();
     }, 100);
   }
+);
+
+// Watch for new items to update filter options
+watch(
+  () => accStore.items,
+  () => {
+    fetchStatusOptions();
+  },
+  { deep: true, immediate: true }
 );
 
 const avatar = async () => {
@@ -224,10 +272,15 @@ const loadForms = async () => {
   }
 };
 
-onMounted(async() => {
+onMounted(async () => {
   await accStore.fetchUsers();
   await avatar();
   await loadForms();
+});
+
+onUnmounted(() => {
+  // Reset pagination offset when component is unmounted
+  accStore.pagination.offset = 0;
 });
 </script>
 

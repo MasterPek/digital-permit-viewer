@@ -4,6 +4,7 @@ import { ref } from 'vue';
 
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 
+// TODO: integrate project api from backend
 const projects = ref([
     { id: 1, name: 'QTMP - Test Project' },
 ])
