@@ -6,20 +6,27 @@
       </div>
       <Avatar :label="avatarLabel" shape="circle" v-tooltip="`${avatarTooltip}`" />
     </div>
-    <div class="m-2 mt-0 scroll-container" ref="scrollContainer" @scroll="handleScroll">
-      <PanelMenu :model="filteredMenuItems">
+    <div class="mt-0 scroll-container" ref="scrollContainer" @scroll="handleScroll">
+      <PanelMenu :model="filteredMenuItems" style="margin: 0.5rem;">
         <template #item="{ item }">
           <a v-ripple class="flex items-center px-4 py-2 cursor-pointer group">
             <div class="flex flex-col w-full">
               <span :class="[{ 'font-semibold': item.items }]">{{ item.label }}</span>
               <div class="flex justify-between items-center">
-                <Tag v-if="item.approvalStatus" :severity="statusClass(item.approvalStatus, 'severity')"
-                  class="text-sm">
-                  {{ item.approvalStatus }}
-                </Tag>
-                <Tag severity="secondary" class="text-sm" v-else>
-                  Not Available
-                </Tag>
+                <div class="flex items-center space-x-2">
+                  <!-- Approval status below forms -->
+                  <Tag v-if="item.approvalStatus" :severity="statusClass(item.approvalStatus, 'severity')"
+                    class="text-sm" v-tooltip="'Approval Status'">
+                    {{ item.approvalStatus }}
+                  </Tag>
+                  <Tag severity="secondary" class="text-sm" v-tooltip="'Approval Status'" v-else>
+                    Not Available
+                  </Tag>
+                  <!-- form number -->
+                  <Tag severity="secondary" class="text-sm" v-tooltip="'Form ID'">
+                    #{{ item.form.formNum }}
+                  </Tag>
+                </div>
                 <Button label="created by" size="small" text />
               </div>
             </div>
@@ -78,13 +85,13 @@ const toggle = (event) => {
 const clearFilters = async () => {
   selectedStatus.value = null;
   op.value.hide();
-  
+
   // Reset store pagination
   accStore.pagination.offset = 0;
-  
+
   // Clear existing items to prevent duplication
   accStore.items = [];
-  
+
   // Reload forms from the beginning
   loading.value = true;
   try {
@@ -103,7 +110,7 @@ const selectStatus = (status) => {
 
 const fetchStatusOptions = () => {
   let allCustomValues = accStore.items.flatMap(item => item.form?.customValues || []);
-  
+
   const statusField = allCustomValues.find(
     (field) =>
       field.itemLabel?.toLowerCase() === 'approval status' &&
@@ -140,7 +147,8 @@ const filteredMenuItems = computed(() => {
   return menuItems.value.filter((item) => {
     return (
       item.approvalStatus === selectedStatus.value &&
-      item.label.toLowerCase().includes("permit")
+      item.label.toLowerCase().includes("permit") &&
+      item.form
     );
   });
 });
@@ -170,7 +178,7 @@ const checkIfMoreItemsNeeded = () => {
 
   const container = scrollContainer.value;
   const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 300;
-  
+
   // If filtered results are low, try to load more
   if (isNearBottom && filteredMenuItems.value.length < 10 && !loading.value) {
     if (accStore.pagination.offset < accStore.pagination.totalResults) {
@@ -197,7 +205,7 @@ const loadMoreItems = async () => {
   try {
     await accStore.fetchForms(true);
     fetchStatusOptions();
-    
+
     if (accStore.pagination.offset >= accStore.pagination.totalResults) {
       noMoreItems.value = true;
     }

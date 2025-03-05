@@ -6,6 +6,7 @@ import esriConfig from "@arcgis/core/config";
 import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
+import { useScreenshotStore } from "@/store/screenshotStore";
 import AuthACC from "./pages/auth/AuthACC.vue";
 import DrawerWebmap from "@/layout/DrawerWebmap.vue";
 import DrawerWebmapRight from "@/layout/DrawerWebmapRight.vue";
@@ -14,6 +15,7 @@ import { useRoute, useRouter } from "vue-router";
 import { fastapiPermitAnnotations } from "@/service/fastapi.service";
 
 const basemapStore = useBasemapStore();
+const screenshotStore = useScreenshotStore()
 
 esriConfig.apiKey = import.meta.env.VITE_ARCGIS_CONFIG_APIKEY;
 esriConfig.portalUrl = import.meta.env.VITE_ARCGIS_PORTAL_URL;
@@ -134,7 +136,7 @@ const findFeatureByFormId = async (formId) => {
 				returnGeometry: true,
 				outFields: ["*"]
 			};
-			// console.log('Executing query:', query);
+			console.log('Executing query:', query);
 
 			try {
 				const result = await layer.queryFeatures(query);
@@ -160,7 +162,7 @@ const findFeatureByFormId = async (formId) => {
 
 				if (layer.title === "Digital Permit") {
 					if (layer.type === "group") {
-						// console.log('Found PERMIT group layer, searching sublayers...');
+						// console.log('Found layer.title group layer, searching sublayers...');
 						// Load the group layer if it hasn't been loaded
 						if (!layer.loaded) {
 							await layer.load();
@@ -260,30 +262,19 @@ const initializeMapView = async () => {
 				attributes: feature.attributes,
 				layerName: feature.layer?.title,
 				title: feature.layer?.popupTemplate?.title,
-				content: feature.layer?.popupTemplate?.content
 			};
 
 			// Update URL with formid
 			const formId = feature.attributes.formid;
 			router.push({ query: { ...route.query, formid: formId } });
 
-			console.log('formid', popupData.value.attributes);
+			console.log('webmap', webmap.layers.items);
 			console.log('popupData.value', popupData.value);
 		}
 	});
 
-	view.on("popup-close", () => {
-		selectedFeature.value = null;
-		popupData.value = null;
-		// Remove formid from URL when popup closes
-		const query = { ...route.query };
-		delete query.formid;
-		router.push({ query });
-	});
-
 	await view.when(
 		() => {
-			console.log("MapView loaded successfully");
 			fetchAllLayers();
 		},
 		(error) => console.error("Error loading MapView:", error),
@@ -532,6 +523,7 @@ onMounted(async () => {
 			await zoomToFeature(feature);
 		}
 	}
+	screenshotStore.setMapViewDiv(mapViewDiv.value)
 });
 </script>
 

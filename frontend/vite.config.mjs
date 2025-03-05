@@ -31,6 +31,11 @@ export default defineConfig({
                     Accept: "application/json",
                 }
             },
+            "/api/v1": {
+                target: "http://127.0.0.1:8000",
+                changeOrigin: true,
+                secure: false, // Disable if the API uses self-signed certificates
+            },
         },
     },
 });
