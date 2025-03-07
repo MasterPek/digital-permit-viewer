@@ -46,7 +46,6 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import Button from 'primevue/button';
 
 // Props for customization
 const props = defineProps({

@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from "vue";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import esriConfig from "@arcgis/core/config";
+import Print from "@arcgis/core/widgets/Print";
 import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
@@ -55,14 +56,18 @@ const handleCloseDrawers = () => {
 };
 
 const handleFormSelected = (form) => {
-	if (selectedForm.value === form) {
-		// If the same form is clicked, toggle the drawer
-		isRightDrawerOpen.value = !isRightDrawerOpen.value;
-	} else {
-		// Otherwise, open the drawer with the new form
-		selectedForm.value = form;
-		isRightDrawerOpen.value = true;
-	}
+  if (selectedForm.value?.id === form.id) {
+    // If the drawer is closed, reopen it; otherwise, close it
+    if (!isRightDrawerOpen.value) {
+      isRightDrawerOpen.value = true;
+    } else {
+      isRightDrawerOpen.value = false;
+    }
+  } else {
+    // Set the selected form and open the drawer
+    selectedForm.value = form;
+    isRightDrawerOpen.value = true;
+  }
 };
 
 const handleShowArea = async (formId) => {
@@ -279,6 +284,18 @@ const initializeMapView = async () => {
 		},
 		(error) => console.error("Error loading MapView:", error),
 	);
+
+	await view.when(() => {
+		const print = new Print({
+			view: view,
+			// specify your own print service
+			printServiceUrl:
+				"https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+		});
+
+		// Add widget to the top right corner of the view
+		view.ui.add(print, "top-right");
+	});
 };
 
 const transformLayerToTreeNode = (layerData, checkedState = {}) => {
@@ -537,8 +554,7 @@ onMounted(async () => {
 				<div ref="mapViewDiv" style="height: 94vh; width: 100%; position: relative; overflow: hidden;">
 					<SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
 						style="position: absolute; bottom: 25px; right: 10px" />
-					<DrawerWebmap
-					v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
+					<DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
 						<template #default="{ drawerTitle }">
 							<div v-if="drawerTitle === 'Layer'">
 								<Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"

@@ -34,6 +34,8 @@ export const useAccStore = defineStore("accStore", {
                 const res = await accForms(offset, limit);
                 const data = await res.json();
 
+                console.log('data', data)
+
                 if (isLoadMore) {
                     this.forms.push(...data.data);
                 } else {

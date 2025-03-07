@@ -59,7 +59,6 @@
 </template>
 
 <script setup>
-import { accAccount } from '@/service/acc.service';
 import { useAccStore } from '@/store/accStore';
 import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
 
@@ -139,6 +138,7 @@ const fetchStatusOptions = () => {
 //   }
 // };
 
+// TODO: validation if item.label did not contain 'permit' it will go to next offset
 const filteredMenuItems = computed(() => {
   if (!selectedStatus.value) {
     return menuItems.value.filter((item) => item.label.toLowerCase().includes("permit"));
