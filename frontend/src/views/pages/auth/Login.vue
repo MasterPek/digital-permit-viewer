@@ -92,7 +92,7 @@ onUnmounted(() => {
             </div>
             <div>
                 <div class="space-y-4">
-                    <Button :loading="isLoading" @click="handleLogin">
+                    <Button :loading="isLoading" @click="handleLogin" v-tooltip.bottom="'login with Gamuda Australia ArcGIS account'">
                         {{ isLoading ? 'Signing in...' : 'Login with ArcGIS' }}
                     </Button>
                 </div>

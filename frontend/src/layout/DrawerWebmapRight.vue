@@ -28,12 +28,12 @@
                 <span v-else>Not Available</span>
               </div>
 
-              <Divider />
+              <!-- <Divider />
 
               <div class="flex flex-col gap-3">
                 <h3 class="font-medium text-xl">Form UUID (will delete after everything finalized)</h3>
                 <span>{{ selectedForm?.id }}</span>
-              </div>
+              </div> -->
 
 
               <Divider />
@@ -71,7 +71,8 @@
                 <div class="flex items-center justify-end">
                   <Button @click="accLinkForm" icon="pi pi-external-link" severity="info" text size="small"
                     v-tooltip="'Check the form in ACC'" />
-                  <Button icon="pi pi-file-pdf" text size="small" v-tooltip="'View document'" />
+                    <!-- TODO: check if this button needed -->
+                  <!-- <Button @click="viewDocument" icon="pi pi-file-pdf" text size="small" v-tooltip="'View document'" :disabled="!uploadedFileUrl" /> -->
                 </div>
               </div>
 
@@ -90,19 +91,23 @@
                       <!-- <p v-if="tab.type === 'text'" class="m-0">{{ tab.content }}</p> -->
 
                       <div v-if="tab.type === 'generate'">
+                        <div class="flex justify-end mb-2">
+                          <!-- Question icon button -->
+                          <Button @click="openQuestion = true" severity="info" icon="pi pi-question" size="small" text
+                            v-tooltip="'Click to show steps'" />
+                        </div>
+                          
                         <!-- File upload -->
                         <FileUpload 
                         @files-selected="handleFileUpload"
-                        @upload-clicked="generatePdf"
+                        @upload-clicked="handleGeneratePdf"
                         multiple
-                        maxFiles="2"
+                        :maxFiles="2"
                         :supportedFiles="'PDF'"
                         :maxFileSize="10" 
-                        uploadLabelBtn="Generate" />
+                        uploadLabelBtn="Generate"
+                        :loading="loading" />
 
-                        <!-- Question icon button -->
-                        <Button @click="openQuestion = true" severity="info" icon="pi pi-question" size="small" text
-                          v-tooltip="'Click to show steps'" />
 
                         <!-- Modal -->
                         <Dialog v-model:visible="openQuestion" modal header="Steps to generate Form with permit area"
@@ -130,9 +135,6 @@
                           </div>
                         </Dialog>
                       </div>
-
-                      <Button v-if="tab.type === 'generate'" @click="generatePdf" severity="info" label="Generate"
-                        fluid />
 
                       <!-- <img v-if="tab.type === 'image'" :src="tab.content" class="w-48" /> -->
                     </div>
@@ -179,9 +181,11 @@ const toast = useToast()
 const selectedTemplate = ref(null);
 
 const openQuestion = ref(false);
+const loading = ref(false);
 
-const selectedFile = ref(null);
+const selectedFile = ref([]);
 const activePanel = ref(null); // Stores currently active accordion panel
+const uploadedFileUrl = ref(null)
 
 const tabs = ref([
   { title: "Generate & Download PDF", value: "0", content: "", type: "generate" },
@@ -276,9 +280,31 @@ const accLinkForm = () => {
   window.open(`https://acc.autodesk.com/build/forms/projects/08eee442-9a68-4b82-9d6d-2c50240c3fd6/field-reports/bbf09ad9-3239-5c3f-acb9-379eb359dcd6/reports/${props.selectedForm?.id}`, '_blank');
 };
 
+function viewDocument() {
+  if (uploadedFileUrl.value) {
+    window.open(uploadedFileUrl.value, '_blank');
+  }
+}
+
 function handleFileUpload(files) {
   selectedFile.value = files
 }
+
+const handleGeneratePdf = async (files) => {
+  loading.value = true; // Set loading to true
+  try {
+    await generatePdf(files); // Call the actual function
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+  } finally {
+    loading.value = false; // Reset loading state
+  }
+
+  // Reset FileUpload component
+  setTimeout(() => {
+    selectedFile.value = [];
+  }, 100);
+};
 
 async function generatePdf() {
   if (!selectedFile.value) {
@@ -291,9 +317,8 @@ async function generatePdf() {
     formData.append('files', file);
   }
 
-  // Send the request to the backend
   try {
-    const response = await fetch('/api/v1/upload/reports', {
+    const response = await fetch('/dpapi/api/v1/upload/report', {
       method: 'POST',
       body: formData,
     });
@@ -305,11 +330,13 @@ async function generatePdf() {
     }
 
     const result = await response.json();
-    console.log('Success:', result);
 
     toast.add({ severity: 'success', summary: 'Success', detail: result.detail, life: 3000 });
 
-    window.open(`http://127.0.0.1:8000/${result.data.file_path}`, '_blank');
+    window.open(`http://127.0.0.1:5050/${result.data.file_path}`, '_blank');
+
+    // Set the uploaded file URL
+    uploadedFileUrl.value = `http://127.0.0.1:5050/${result.data.file_path}`;
   } catch (error) {
     console.error('Error:', error);
     toast.add({ severity: 'error', summary: 'Error', detail: error.message || error, life: 3000 });

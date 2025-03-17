@@ -1,8 +1,7 @@
 import { defineStore } from "pinia";
 import { toPng } from "html-to-image";
 
-// FIXME: refmapviewdiv currently cannot be captured. Alternatively, change to canvas tag
-// TODO: margin for screenshot
+// TODO: delete this store
 export const useScreenshotStore = defineStore("screenshot", {
     state: () => ({
         mapViewDiv: null,

@@ -17,11 +17,6 @@ const model = ref([
                 icon: 'pi pi-fw pi-id-card', 
                 to: {name: 'survey-layer'},
             },
-            { 
-                label: 'Webmap Test', 
-                icon: 'pi pi-fw pi-id-card', 
-                to: {name: 'webmap-test'},
-            },
         ]
     },
 ]);

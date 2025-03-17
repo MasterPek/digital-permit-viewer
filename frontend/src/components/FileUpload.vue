@@ -30,6 +30,10 @@ const props = defineProps({
   uploadIconBtn: {
     type: String,
     default: '' // Optional uploadIconBtn class (e.g., "pi pi-upload")
+  },
+  loading: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -61,6 +65,9 @@ const handleUploadClick = () => {
   }
   error.value = ''; // Clear any error message
   emit('upload-clicked', uploadedFiles.value);
+
+  // Clear the uploadedFiles array after uploading
+  clearAll();
 };
 
 // Handle file selection
@@ -257,17 +264,16 @@ const clearAll = () => {
 
         <!-- Action Buttons -->
         <div class="mt-4 grid grid-cols-2 gap-4">
-          <button @click="handleUploadClick"
-            class="btn-upload">
-            <span
-              class="btn-upload-content">
+          <button @click="handleUploadClick" :disabled="loading" class="btn-upload">
+            <span class="btn-upload-content">
               <!-- Conditional uploadIconBtn Rendering -->
-              <i v-if="uploadIconBtn" :class="uploadIconBtn" class="text-lg"></i>
-              {{ uploadLabelBtn }}
+              <i v-if="uploadIconBtn && !loading" :class="uploadIconBtn"></i>
+              <!-- Loading Spinner -->
+              <i v-if="loading" class="pi pi-spinner pi-spin"></i>
+              {{ loading ? 'Uploading...' : uploadLabelBtn }}
             </span>
           </button>
-          <button @click="clearAll"
-            class="btn-clear-upload">
+          <button @click="clearAll" :disabled="loading" class="btn-clear-upload">
             Clear All
           </button>
         </div>

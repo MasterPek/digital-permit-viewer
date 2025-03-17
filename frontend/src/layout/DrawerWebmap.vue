@@ -3,14 +3,14 @@
     <!-- Trigger Buttons -->
     <div class="drawer-trigger" @click="toggleDrawer('Layer')">
       <button v-tooltip="'Layer'" :class="{ 'active-drawer': isDrawerOpen && drawerTitle === 'Layer' }">
-        <span class="material-symbols-outlined text-3xl text-red-400">
+        <span class="material-symbols-outlined drawer-icon">
           stacks
         </span>
       </button>
     </div>
     <!-- <div class="drawer-trigger" @click="toggleDrawer('Legend')">
       <button v-tooltip="'Legend'" :class="{ 'active-drawer': isDrawerOpen && drawerTitle === 'Legend' }">
-        <span class="material-symbols-outlined text-3xl text-red-400">
+        <span class="material-symbols-outlined drawer-icon">
           legend_toggle
         </span>
       </button>
@@ -18,7 +18,7 @@
 
     <div class="drawer-trigger" @click="toggleDrawer('Permit')">
       <button v-tooltip="'Permit'" :class="{ 'active-drawer': isDrawerOpen && drawerTitle === 'Permit' }">
-        <span class="material-symbols-outlined text-3xl text-red-400">
+        <span class="material-symbols-outlined drawer-icon">
           license
         </span>
       </button>
@@ -138,6 +138,12 @@ watch(() => props.modelValue, (newValue) => {
   flex-grow: 1;
   overflow: hidden;
   /* padding: 15px; */
+}
+
+.drawer-icon {
+  font-size: 1.7rem;
+  line-height: 1.5rem;
+  color: var(--primary-color);
 }
 
 .close-button {

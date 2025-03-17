@@ -123,7 +123,7 @@ export const accTemplateForms = async () => {
   }
 }
 
-export const accForms = async (offset = 0, limit = 50) => {
+export const accForms = async (offset = 0, limit = 0) => {
   try {
     const url = `${ACC_ENDPOINTS.ACC_FORMS}?offset=${offset}&limit=${limit}&sortOrder=desc`;
 

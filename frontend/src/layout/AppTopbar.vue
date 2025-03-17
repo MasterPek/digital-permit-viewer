@@ -15,10 +15,10 @@ const selectedProject = ref(projects.value.find((project) => project.id === 1));
 <template>
     <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
-            <button class="layout-menu-button layout-topbar-action" @click="onMenuToggle">
+            <!-- <button class="layout-menu-button layout-topbar-action" @click="onMenuToggle">
                 <i class="pi pi-bars"></i>
-            </button>
-            <router-link :to="{name: 'survey-layer'}" class="layout-topbar-logo">
+            </button> -->
+            <router-link :to="{ name: 'webmap' }" class="layout-topbar-logo">
                 <div>
                     <img src="/demo/images/gamuda.png" class="rounded-xl" alt="" height="35px" width="35px">
                 </div>

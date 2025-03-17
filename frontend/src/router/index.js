@@ -42,39 +42,13 @@ const router = createRouter({
                     name: "drag",
                     component: () => import("@/views/pages/Drag.vue"),
                 },
-                {
-                    path: "/:pathMatch(.*)*",
-                    name: "notfound",
-                    component: () => import("@/views/pages/NotFound.vue"),
-                },
-
-                {
-                    path: "/webmap/test",
-                    name: "webmap-test",
-                    component: () => import("@/views/pages/WebmapTest.vue"),
-                },
             ],
-        },
-        {
-            path: "/landing",
-            name: "landing",
-            component: () => import("@/views/pages/Landing.vue"),
         },
         {
             path: "/auth/login",
             name: "login",
             component: () => import("@/views/pages/auth/Login.vue"),
             meta: {public: true}
-        },
-        {
-            path: "/auth/access",
-            name: "accessDenied",
-            component: () => import("@/views/pages/auth/Access.vue"),
-        },
-        {
-            path: "/auth/error",
-            name: "error",
-            component: () => import("@/views/pages/auth/Error.vue"),
         },
     ],
 });

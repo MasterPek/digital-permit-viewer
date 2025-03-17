@@ -55,19 +55,11 @@ const handleCloseDrawers = () => {
 	isRightDrawerOpen.value = false; // Close DrawerWebmapRight
 };
 
-const handleFormSelected = (form) => {
-  if (selectedForm.value?.id === form.id) {
-    // If the drawer is closed, reopen it; otherwise, close it
-    if (!isRightDrawerOpen.value) {
-      isRightDrawerOpen.value = true;
-    } else {
-      isRightDrawerOpen.value = false;
-    }
-  } else {
-    // Set the selected form and open the drawer
-    selectedForm.value = form;
-    isRightDrawerOpen.value = true;
-  }
+const handleFormSelected = async (form) => {
+	selectedForm.value = form;
+	isRightDrawerOpen.value = true;
+
+	await handleShowArea(form.id);
 };
 
 const handleShowArea = async (formId) => {

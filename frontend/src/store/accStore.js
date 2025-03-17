@@ -51,7 +51,7 @@ export const useAccStore = defineStore("accStore", {
                 }));
 
                 // Update Pagination
-                this.pagination.offset += limit;
+                // this.pagination.offset += limit;
                 this.pagination.totalResults = data.pagination.totalResults;
             } catch (error) {
                 console.error("Error fetching forms:", error);
@@ -59,7 +59,6 @@ export const useAccStore = defineStore("accStore", {
                 this.loading = false;
             }
         },
-
         setSelectedForm(form) {
             this.selectedForm = form;
             console.log("Selected form:", form);

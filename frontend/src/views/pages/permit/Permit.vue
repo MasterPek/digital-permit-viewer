@@ -27,7 +27,7 @@
                     #{{ item.form.formNum }}
                   </Tag>
                 </div>
-                <Button label="created by" size="small" text />
+                <!-- <Button label="created by" size="small" text /> -->
               </div>
             </div>
           </a>
@@ -140,17 +140,26 @@ const fetchStatusOptions = () => {
 
 // TODO: validation if item.label did not contain 'permit' it will go to next offset
 const filteredMenuItems = computed(() => {
+  let filteredItems;
+
   if (!selectedStatus.value) {
-    return menuItems.value.filter((item) => item.label.toLowerCase().includes("permit"));
+    filteredItems = menuItems.value.filter((item) => item.label.toLowerCase().includes("permit"));
+  } else {
+    filteredItems = menuItems.value.filter((item) => {
+      return (
+        item.approvalStatus === selectedStatus.value &&
+        item.label.toLowerCase().includes("permit") &&
+        item.form
+      );
+    });
   }
 
-  return menuItems.value.filter((item) => {
-    return (
-      item.approvalStatus === selectedStatus.value &&
-      item.label.toLowerCase().includes("permit") &&
-      item.form
-    );
-  });
+  // If no valid "permit" items are found, load more items
+  if (filteredItems.length === 0 && accStore.pagination.offset < accStore.pagination.totalResults) {
+    loadMoreItems();
+  }
+
+  return filteredItems;
 });
 
 // Computed menu items with enriched Approval Status
@@ -199,11 +208,14 @@ const handleScroll = (event) => {
 };
 
 const loadMoreItems = async () => {
-  if (loading.value) return;
+  if (loading.value || accStore.pagination.offset >= accStore.pagination.totalResults) return;
+  
   loading.value = true;
-
+  
   try {
     await accStore.fetchForms(true);
+    accStore.pagination.offset += accStore.pagination.limit;
+    
     fetchStatusOptions();
 
     if (accStore.pagination.offset >= accStore.pagination.totalResults) {
