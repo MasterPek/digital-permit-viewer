@@ -59,8 +59,7 @@
               <div class="flex flex-col gap-3">
                 <h3 class="font-medium text-xl">Permit Area</h3>
                 <div class="flex justify-center gap-4 px-4">
-                  <Button @click="showArea" icon="pi pi-search" label="Show Area" severity="info" outlined
-                    size="small" />
+                  <Button @click="showArea" icon="pi pi-search" label="Show Area" severity="info" outlined size="small" />
                 </div>
               </div>
 
@@ -71,7 +70,7 @@
                 <div class="flex items-center justify-end">
                   <Button @click="accLinkForm" icon="pi pi-external-link" severity="info" text size="small"
                     v-tooltip="'Check the form in ACC'" />
-                    <!-- TODO: check if this button needed -->
+                  <!-- TODO: check if this button needed -->
                   <!-- <Button @click="viewDocument" icon="pi pi-file-pdf" text size="small" v-tooltip="'View document'" :disabled="!uploadedFileUrl" /> -->
                 </div>
               </div>
@@ -96,17 +95,11 @@
                           <Button @click="openQuestion = true" severity="info" icon="pi pi-question" size="small" text
                             v-tooltip="'Click to show steps'" />
                         </div>
-                          
+
                         <!-- File upload -->
-                        <FileUpload 
-                        @files-selected="handleFileUpload"
-                        @upload-clicked="handleGeneratePdf"
-                        multiple
-                        :maxFiles="2"
-                        :supportedFiles="'PDF'"
-                        :maxFileSize="10" 
-                        uploadLabelBtn="Generate"
-                        :loading="loading" />
+                        <FileUpload @files-selected="handleFileUpload" @upload-clicked="handleGeneratePdf" multiple
+                          :maxFiles="2" :supportedFiles="'PDF'" :maxFileSize="10" uploadLabelBtn="Generate"
+                          :loading="loading" />
 
 
                         <!-- Modal -->
@@ -150,11 +143,11 @@
 </template>
 
 <script setup>
-import { onMounted, computed, ref, watch } from 'vue';
+import FileUpload from "@/components/FileUpload.vue";
 import { useAccTemplateStore } from '@/store/accStore';
 import { storeToRefs } from 'pinia';
 import { useToast } from "primevue/usetoast";
-import FileUpload from "@/components/FileUpload.vue";
+import { computed, onMounted, ref } from 'vue';
 
 const props = defineProps({
   modelValue: {
@@ -318,7 +311,7 @@ async function generatePdf() {
   }
 
   try {
-    const response = await fetch('/dpapi/api/v1/upload/report', {
+    const response = await fetch('/digital-permits/api/upload/report', {
       method: 'POST',
       body: formData,
     });

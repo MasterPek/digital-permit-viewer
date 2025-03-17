@@ -7,6 +7,7 @@ import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    base: '/digital-permit/',
     optimizeDeps: {
         noDiscovery: true,
     },
@@ -23,7 +24,7 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            "/dpapi": {
+            "/digital-permits": {
                 target: "https://vertex.gamuda.com.my",
                 changeOrigin: true,
                 secure: false, // Disable if the API uses self-signed certificates
