@@ -144,6 +144,7 @@
 
 <script setup>
 import FileUpload from "@/components/FileUpload.vue";
+import { baseUrl } from "@/constants/fastapi.constant";
 import { useAccTemplateStore } from '@/store/accStore';
 import { storeToRefs } from 'pinia';
 import { useToast } from "primevue/usetoast";
@@ -326,10 +327,7 @@ async function generatePdf() {
 
     toast.add({ severity: 'success', summary: 'Success', detail: result.detail, life: 3000 });
 
-    window.open(`http://127.0.0.1:5050/${result.data.file_path}`, '_blank');
-
-    // Set the uploaded file URL
-    uploadedFileUrl.value = `http://127.0.0.1:5050/${result.data.file_path}`;
+    window.open(`${baseUrl}/${result.data.file_path}`, '_blank');
   } catch (error) {
     console.error('Error:', error);
     toast.add({ severity: 'error', summary: 'Error', detail: error.message || error, life: 3000 });

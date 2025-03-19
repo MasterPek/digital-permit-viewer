@@ -26,13 +26,13 @@ const router = createRouter({
                     component: () => import("@/views/pages/permit/Permit.vue"),
                 },
                 {
-                    path: "dev/digital-permit/acc/auth/callback",
+                    path: "/acc/auth/callback",
                     name: "acc-callback",
                     component: () =>
                         import("@/views/pages/auth/CallBackACC.vue"),
                 },
                 {
-                    path: "/dev/digital-permit/gis/auth/callback",
+                    path: "/gis/auth/callback",
                     name: "arcgis-callback",
                     component: () =>
                         import("@/views/pages/auth/CallBackArcGis.vue"),
