@@ -7,16 +7,14 @@ import Print from "@arcgis/core/widgets/Print";
 import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
-import { useScreenshotStore } from "@/store/screenshotStore";
 import AuthACC from "./pages/auth/AuthACC.vue";
 import DrawerWebmap from "@/layout/DrawerWebmap.vue";
 import DrawerWebmapRight from "@/layout/DrawerWebmapRight.vue";
 import { restoreCredentials } from "@/service/arcgis.service";
 import { useRoute, useRouter } from "vue-router";
-import { fastapiPermitAnnotations } from "@/service/fastapi.service";
+import Popup from "@arcgis/core/widgets/Popup.js";
 
 const basemapStore = useBasemapStore();
-const screenshotStore = useScreenshotStore()
 
 esriConfig.apiKey = import.meta.env.VITE_ARCGIS_CONFIG_APIKEY;
 esriConfig.portalUrl = import.meta.env.VITE_ARCGIS_PORTAL_URL;
@@ -245,6 +243,8 @@ const initializeMapView = async () => {
 	view.on("drag-end", () => (mapViewDiv.value.style.cursor = "default"));
 	view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "default"));
 
+	view.openPopup()
+
 	view.on("click", async (event) => {
 		const response = await view.hitTest(event);
 
@@ -392,10 +392,6 @@ const fetchAllLayers = async () => {
 	}
 };
 
-async function fetchFastApiPermitAnnotations() {
-	const res = await fastapiPermitAnnotations();
-}
-
 // Modified watch to handle nested layers more precisely
 watch(
 	selectedNodes,
@@ -532,7 +528,6 @@ onMounted(async () => {
 			await zoomToFeature(feature);
 		}
 	}
-	screenshotStore.setMapViewDiv(mapViewDiv.value)
 });
 </script>
 
