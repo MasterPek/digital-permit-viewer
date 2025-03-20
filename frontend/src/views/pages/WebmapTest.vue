@@ -87,6 +87,95 @@ const countryName = computed(() => {
     return country ? country.name : "Unknown";
 });
 
+const findFeatureByFormId = async (formId) => {
+	if (!webmap || !formId) {
+		console.warn('webmap or formId is missing.');
+		return null;
+	}
+
+	try {
+		await webmap.loadAll();
+
+		// Function to query a feature layer
+		const queryFeatureLayer = async (layer) => {
+			// console.log(`Querying feature layer: ${layer.title}`);
+
+			const query = {
+				where: `formid = '${formId}'`,
+				returnGeometry: true,
+				outFields: ["*"]
+			};
+			console.log('Executing query:', query);
+
+			try {
+				const result = await layer.queryFeatures(query);
+				// console.log('Query result:', result);
+
+				if (result.features.length > 0) {
+					const feature = result.features[0];
+					console.log('Feature found:', feature);
+					feature.layer = layer;
+					return feature;
+				}
+				return null;
+			} catch (error) {
+				console.error(`Error querying layer ${layer.title}:`, error);
+				return null;
+			}
+		};
+
+		// Function to recursively search through layers
+		const searchLayers = async (layers) => {
+			for (const layer of layers) {
+				// console.log(`Checking layer: ${layer.title} (Type: ${layer.type})`);
+
+				if (layer.title === "Digital Permit") {
+					if (layer.type === "group") {
+						// console.log('Found layer.title group layer, searching sublayers...');
+						// Load the group layer if it hasn't been loaded
+						if (!layer.loaded) {
+							await layer.load();
+						}
+
+						// Search through sublayers
+						for (const sublayer of layer.layers.items) {
+							// console.log(`Checking sublayer: ${sublayer.title} (Type: ${sublayer.type})`);
+
+							if (sublayer.type === "feature") {
+								const feature = await queryFeatureLayer(sublayer);
+								if (feature) return feature;
+							}
+						}
+					} else if (layer.type === "feature") {
+						const feature = await queryFeatureLayer(layer);
+						if (feature) return feature;
+					}
+				}
+
+				// If the layer has sublayers, search through them
+				// if (layer.layers) {
+				//     const feature = await searchLayers(layer.layers.items);
+				//     if (feature) return feature;
+				// }
+			}
+			return null;
+		};
+
+		// Start the search from the webmap's layers
+		const feature = await searchLayers(webmap.layers.items);
+
+		if (!feature) {
+			console.warn('No feature found in any layer.');
+			toast.add({ severity: "warn", summary: "Feature Not Found", detail: "No feature found with the specified form ID", life: 3000 });
+		}
+
+		return feature;
+	} catch (error) {
+		console.error('Error in findFeatureByFormId:', error);
+		return null;
+	}
+};
+
 const initializeMapView = () => {
     webmap = new WebMap({
         portalItem: { id: import.meta.env.VITE_ARCGIS_WEBMAP_ID },

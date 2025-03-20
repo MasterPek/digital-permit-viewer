@@ -12,7 +12,6 @@ import DrawerWebmap from "@/layout/DrawerWebmap.vue";
 import DrawerWebmapRight from "@/layout/DrawerWebmapRight.vue";
 import { restoreCredentials } from "@/service/arcgis.service";
 import { useRoute, useRouter } from "vue-router";
-import Popup from "@arcgis/core/widgets/Popup.js";
 
 const basemapStore = useBasemapStore();
 
@@ -73,38 +72,24 @@ const handleShowArea = async (formId) => {
 			// Wait for view to be ready
 			await view.when();
 
-			// Check if the formId parameter matches the route query formId
-			if (formId === route.query.formid) {
-				const feature = await findFeatureByFormId(formId);
-				if (feature) {
-					// Set the selected feature and popup data
-					selectedFeature.value = feature;
-					popupData.value = {
-						attributes: feature.attributes,
-						layerName: feature.layer?.title,
-						title: feature.layer?.popupTemplate?.title,
-						content: feature.layer?.popupTemplate?.content
-					};
+			// Find the feature by formId first
+			const feature = await findFeatureByFormId(formId);
+			if (feature) {
+				// Set the selected feature and popup data
+				selectedFeature.value = feature;
+				popupData.value = {
+					attributes: feature.attributes,
+					layerName: feature.layer?.title,
+					title: feature.layer?.popupTemplate?.title,
+					content: feature.layer?.popupTemplate?.content
+				};
 
-					// Zoom to the feature
-					await zoomToFeature(feature);
-				}
-			} else {
-				// Update the route with the new formId
-				await router.push({ query: { ...route.query, formid: formId } });
-
-				// Now find and zoom to the feature with the new formId
-				const feature = await findFeatureByFormId(formId);
-				if (feature) {
-					selectedFeature.value = feature;
-					popupData.value = {
-						attributes: feature.attributes,
-						layerName: feature.layer?.title,
-						title: feature.layer?.popupTemplate?.title,
-						content: feature.layer?.popupTemplate?.content
-					};
-
-					await zoomToFeature(feature);
+				// Zoom to the feature
+				await zoomToFeature(formId);
+				
+				// Update the route with the formId only if it's different
+				if (formId !== route.query.formid) {
+					await router.push({ query: { ...route.query, formid: formId } });
 				}
 			}
 		} catch (error) {
@@ -121,11 +106,11 @@ const findFeatureByFormId = async (formId) => {
 
 	try {
 		await webmap.loadAll();
+		let foundFeature = null;
+		let foundLayer = null;
 
 		// Function to query a feature layer
 		const queryFeatureLayer = async (layer) => {
-			// console.log(`Querying feature layer: ${layer.title}`);
-
 			const query = {
 				where: `formid = '${formId}'`,
 				returnGeometry: true,
@@ -135,11 +120,10 @@ const findFeatureByFormId = async (formId) => {
 
 			try {
 				const result = await layer.queryFeatures(query);
-				// console.log('Query result:', result);
 
 				if (result.features.length > 0) {
 					const feature = result.features[0];
-					console.log('Feature found:', feature);
+					console.log('Feature found:', feature.attributes);
 					feature.layer = layer;
 					return feature;
 				}
@@ -153,60 +137,61 @@ const findFeatureByFormId = async (formId) => {
 		// Function to recursively search through layers
 		const searchLayers = async (layers) => {
 			for (const layer of layers) {
-				// console.log(`Checking layer: ${layer.title} (Type: ${layer.type})`);
-
 				if (layer.title === "Digital Permit") {
 					if (layer.type === "group") {
-						// console.log('Found layer.title group layer, searching sublayers...');
-						// Load the group layer if it hasn't been loaded
 						if (!layer.loaded) {
 							await layer.load();
 						}
 
 						// Search through sublayers
 						for (const sublayer of layer.layers.items) {
-							// console.log(`Checking sublayer: ${sublayer.title} (Type: ${sublayer.type})`);
-
 							if (sublayer.type === "feature") {
 								const feature = await queryFeatureLayer(sublayer);
-								if (feature) return feature;
+								if (feature) {
+									foundFeature = feature;
+									foundLayer = sublayer;
+									return { feature, layer: sublayer };
+								}
 							}
 						}
 					} else if (layer.type === "feature") {
 						const feature = await queryFeatureLayer(layer);
-						if (feature) return feature;
+						if (feature) {
+							foundFeature = feature;
+							foundLayer = layer;
+							return { feature, layer };
+						}
 					}
 				}
-
-				// If the layer has sublayers, search through them
-				// if (layer.layers) {
-				//     const feature = await searchLayers(layer.layers.items);
-				//     if (feature) return feature;
-				// }
 			}
 			return null;
 		};
 
 		// Start the search from the webmap's layers
-		const feature = await searchLayers(webmap.layers.items);
+		const result = await searchLayers(webmap.layers.items);
 
-		if (!feature) {
+		if (!result) {
 			console.warn('No feature found in any layer.');
 			toast.add({ severity: "warn", summary: "Feature Not Found", detail: "No feature found with the specified form ID", life: 3000 });
+			return null;
 		}
 
-		return feature;
+		return result;
 	} catch (error) {
 		console.error('Error in findFeatureByFormId:', error);
 		return null;
 	}
 };
 
-const zoomToFeature = async (feature) => {
-	if (!feature) return;
+const zoomToFeature = async (formId) => {
+	const result = await findFeatureByFormId(formId);
+	if (!result) return;
+	
+	const { feature, layer } = result;
 
 	try {
-		// Get the feature's geometry
+		await toggleLayerVisibility(formId, layer);
+
 		const geometry = feature.geometry;
 
 		if (geometry) {
@@ -223,8 +208,69 @@ const zoomToFeature = async (feature) => {
 				duration: 1000  // Animation duration in milliseconds
 			});
 		}
+
+		// Set the selected feature for popup data
+		selectedFeature.value = feature;
+		popupData.value = {
+			attributes: feature.attributes,
+			layerName: layer.title,
+			title: layer.popupTemplate?.title,
+		};
 	} catch (error) {
 		console.error("Error zooming to feature:", error);
+	}
+};
+
+const toggleLayerVisibility = async (formId, targetLayer) => {
+	try {
+		// Process group layers and their sublayers
+		const processLayers = (layers) => {
+			layers.forEach(layer => {
+				// If it's a group layer, process its sublayers
+				if (layer.type === "group") {
+					const isDigitalPermitLayer = layer.title === "Digital Permit";
+					
+					// Set the whole group layer visible if it's the Digital Permit layer
+					if (isDigitalPermitLayer) {
+						layer.visible = true;
+						
+						// Process sublayers of Digital Permit
+						if (layer.layers) {
+							layer.layers.items.forEach(sublayer => {
+								// For feature layers, show only the one containing our feature
+								if (sublayer.type === "feature") {
+									sublayer.visible = sublayer === targetLayer;
+									
+									// If this is our target layer, also apply a definition filter
+									if (sublayer === targetLayer) {
+										sublayer.definitionExpression = `formid = '${formId}'`;
+									}
+								}
+							});
+						}
+					} else {
+						// For other group layers, you can decide to hide them or keep them visible
+						// depending on your application requirements
+						layer.visible = false;
+					}
+				} 
+				// For standalone feature layers (not in a group)
+				else if (layer.type === "feature") {
+					if (layer === targetLayer) {
+						layer.visible = true;
+						layer.definitionExpression = `formid = '${formId}'`;
+					} else {
+						layer.visible = false;
+					}
+				}
+			});
+		};
+		
+		// Start processing from the webmap's layers
+		processLayers(webmap.layers.items);
+		
+	} catch (error) {
+		console.error("Error toggling layer visibility:", error);
 	}
 };
 
@@ -265,6 +311,10 @@ const initializeMapView = async () => {
 			const formId = feature.attributes.formid;
 			router.push({ query: { ...route.query, formid: formId } });
 
+			if (formId) {
+				await zoomToFeature(formId);
+			}
+
 			console.log('webmap', webmap.layers.items);
 			console.log('popupData.value', popupData.value);
 		}
@@ -273,6 +323,11 @@ const initializeMapView = async () => {
 	await view.when(
 		() => {
 			fetchAllLayers();
+
+			const urlFormId = route.query.formid;
+			if (urlFormId) {
+				zoomToFeature(urlFormId);
+			}
 		},
 		(error) => console.error("Error loading MapView:", error),
 	);
@@ -288,6 +343,36 @@ const initializeMapView = async () => {
 		// Add widget to the top right corner of the view
 		view.ui.add(print, "top-right");
 	});
+};
+
+const resetAllFilters = () => {
+	try {
+		const resetLayers = (layers) => {
+			layers.forEach(layer => {
+				if (layer.type === "group") {
+					layer.visible = true;
+					
+					if (layer.layers) {
+						layer.layers.items.forEach(sublayer => {
+							if (sublayer.type === "feature") {
+								sublayer.visible = true;
+								sublayer.definitionExpression = null; // Remove any definition expression
+							}
+						});
+					}
+				} 
+				else if (layer.type === "feature") {
+					layer.visible = true;
+					layer.definitionExpression = null; // Remove any definition expression
+				}
+			});
+		};
+		
+		resetLayers(webmap.layers.items);
+		
+	} catch (error) {
+		console.error("Error resetting filters:", error);
+	}
 };
 
 const transformLayerToTreeNode = (layerData, checkedState = {}) => {
@@ -384,8 +469,8 @@ const fetchAllLayers = async () => {
 
 		operationalLayerData.forEach(updateSelectedNodes);
 
-		console.log("selectedNodes:", selectedNodes.value);
-		console.log("treeNodes:", treeNodes.value);
+		// console.log("selectedNodes:", selectedNodes.value);
+		// console.log("treeNodes:", treeNodes.value);
 
 	} catch (error) {
 		console.error("Error fetching layers:", error);
@@ -396,7 +481,7 @@ const fetchAllLayers = async () => {
 watch(
 	selectedNodes,
 	(newSelectedNodes) => {
-		console.log("Selection Changed:", newSelectedNodes);
+		// console.log("Selection Changed:", newSelectedNodes);
 
 		// Recursive function to update layer visibility
 		const updateLayerVisibility = () => {
@@ -457,29 +542,6 @@ watch(
 	},
 );
 
-// watch(() => route.query.formid, async (newFormId) => {
-//     if (newFormId && view) {
-//         try {
-//             // Wait for view to be ready
-//             await view.when();
-
-//             const feature = await findFeatureByFormId(newFormId);
-//             if (feature) {
-//                 selectedFeature.value = feature;
-//                 popupData.value = {
-//                     attributes: feature.attributes,
-//                     layerName: feature.layer?.title,
-//                     title: feature.layer?.popupTemplate?.title,
-//                     content: feature.layer?.popupTemplate?.content
-//                 };
-//                 await zoomToFeature(feature);
-//             }
-//         } catch (error) {
-//             console.error("Error handling formId change:", error);
-//         }
-//     }
-// });
-
 const speedDialItems = ref([
 	{
 		label: "Street View",
@@ -525,7 +587,7 @@ onMounted(async () => {
 			};
 
 			// Zoom to the feature
-			await zoomToFeature(feature);
+			await zoomToFeature(route.query.formid);
 		}
 	}
 });
@@ -539,6 +601,10 @@ onMounted(async () => {
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                 </div> -->
 				<div ref="mapViewDiv" style="height: 94vh; width: 100%; position: relative; overflow: hidden;">
+					<div class="absolute bottom-[65px] right-[10px] flex flex-col gap-2">
+						<Button @click="resetAllFilters" icon="pi pi-filter-slash" rounded v-tooltip="'Reset layer filter'" />
+					</div>
+
 					<SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
 						style="position: absolute; bottom: 25px; right: 10px" />
 					<DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
