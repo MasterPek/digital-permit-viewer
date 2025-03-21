@@ -141,7 +141,7 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 .drawer-icon {
-  font-size: 1.7rem;
+  font-size: 2rem;
   line-height: 1.5rem;
   color: var(--primary-color);
 }

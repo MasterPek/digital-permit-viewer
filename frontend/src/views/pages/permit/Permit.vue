@@ -7,6 +7,7 @@
       <Avatar :label="avatarLabel" shape="circle" v-tooltip="`${avatarTooltip}`" />
     </div>
     <div class="mt-0 scroll-container" ref="scrollContainer" @scroll="handleScroll">
+      <!-- TODO: add error handler for user does not have permission for that project -->
       <PanelMenu :model="filteredMenuItems" style="margin: 0.5rem;">
         <template #item="{ item }">
           <a v-ripple class="flex items-center px-4 py-2 cursor-pointer group">
@@ -36,6 +37,9 @@
       <div v-if="loading" class="text-center">
         <i class="pi pi-spin pi-spinner"></i>
       </div>
+      <div v-if="error" class="text-red-500">
+            {{ error }}
+        </div>
       <p v-if="noMoreItems" class="text-center text-gray-500 my-4">No more items to load</p>
     </div>
     <Popover ref="op">
@@ -65,6 +69,7 @@ import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
 const accStore = useAccStore();
 const scrollContainer = ref(null);
 const loading = ref(false);
+const error = ref(null);
 const noMoreItems = ref(false);
 
 const emit = defineEmits(['formSelected']);
@@ -287,6 +292,7 @@ const loadForms = async () => {
   try {
     await accStore.fetchForms();
     fetchStatusOptions();
+    error.value = accStore.error;
   } finally {
     loading.value = false;
   }

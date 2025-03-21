@@ -14,6 +14,7 @@ export const useAccStore = defineStore("accStore", {
             totalResults: 0,
         },
         loading: false,
+        error: null,
     }),
 
     actions: {
@@ -28,10 +29,17 @@ export const useAccStore = defineStore("accStore", {
         async fetchForms(isLoadMore = false) {
             if (this.loading) return;
             this.loading = true;
+            this.error = null
 
             try {
                 const { offset, limit } = this.pagination;
                 const res = await accForms(offset, limit);
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.detail);
+                }
+
                 const data = await res.json();
 
                 console.log('data', data)
@@ -55,6 +63,7 @@ export const useAccStore = defineStore("accStore", {
                 this.pagination.totalResults = data.pagination.totalResults;
             } catch (error) {
                 console.error("Error fetching forms:", error);
+                this.error = error.message
             } finally {
                 this.loading = false;
             }

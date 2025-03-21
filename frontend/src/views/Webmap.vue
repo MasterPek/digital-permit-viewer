@@ -26,6 +26,8 @@ const mapViewDiv = ref(null);
 
 let view;
 let webmap;
+let print; // Define print widget globally
+
 
 const treeNodes = ref([]);
 const selectedNodes = ref({});
@@ -38,6 +40,8 @@ const selectedForm = ref(null);
 const popupData = ref(null);
 const selectedFeature = ref(null);
 
+const isPrintVisible = ref(false);
+
 // const countries = CountryService.getData();
 
 // const countryCode = computed(() =>
@@ -47,6 +51,14 @@ const selectedFeature = ref(null);
 //     const country = countries.find((c) => c.code === countryCode.value);
 //     return country ? country.name : "Unknown";
 // });
+const hidePrint = () => {
+    isPrintVisible.value = !isPrintVisible.value;
+
+    // Toggle the visible property of the print widget
+    if (print) {
+        print.visible = isPrintVisible.value;
+    }
+};
 
 const handleCloseDrawers = () => {
 	isRightDrawerOpen.value = false; // Close DrawerWebmapRight
@@ -86,7 +98,7 @@ const handleShowArea = async (formId) => {
 
 				// Zoom to the feature
 				await zoomToFeature(formId);
-				
+
 				// Update the route with the formId only if it's different
 				if (formId !== route.query.formid) {
 					await router.push({ query: { ...route.query, formid: formId } });
@@ -186,7 +198,7 @@ const findFeatureByFormId = async (formId) => {
 const zoomToFeature = async (formId) => {
 	const result = await findFeatureByFormId(formId);
 	if (!result) return;
-	
+
 	const { feature, layer } = result;
 
 	try {
@@ -229,18 +241,18 @@ const toggleLayerVisibility = async (formId, targetLayer) => {
 				// If it's a group layer, process its sublayers
 				if (layer.type === "group") {
 					const isDigitalPermitLayer = layer.title === "Digital Permit";
-					
+
 					// Set the whole group layer visible if it's the Digital Permit layer
 					if (isDigitalPermitLayer) {
 						layer.visible = true;
-						
+
 						// Process sublayers of Digital Permit
 						if (layer.layers) {
 							layer.layers.items.forEach(sublayer => {
 								// For feature layers, show only the one containing our feature
 								if (sublayer.type === "feature") {
 									sublayer.visible = sublayer === targetLayer;
-									
+
 									// If this is our target layer, also apply a definition filter
 									if (sublayer === targetLayer) {
 										sublayer.definitionExpression = `formid = '${formId}'`;
@@ -253,7 +265,7 @@ const toggleLayerVisibility = async (formId, targetLayer) => {
 						// depending on your application requirements
 						layer.visible = false;
 					}
-				} 
+				}
 				// For standalone feature layers (not in a group)
 				else if (layer.type === "feature") {
 					if (layer === targetLayer) {
@@ -265,10 +277,10 @@ const toggleLayerVisibility = async (formId, targetLayer) => {
 				}
 			});
 		};
-		
+
 		// Start processing from the webmap's layers
 		processLayers(webmap.layers.items);
-		
+
 	} catch (error) {
 		console.error("Error toggling layer visibility:", error);
 	}
@@ -288,8 +300,6 @@ const initializeMapView = async () => {
 	view.on("drag", () => (mapViewDiv.value.style.cursor = "grabbing"));
 	view.on("drag-end", () => (mapViewDiv.value.style.cursor = "default"));
 	view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "default"));
-
-	view.openPopup()
 
 	view.on("click", async (event) => {
 		const response = await view.hitTest(event);
@@ -333,14 +343,13 @@ const initializeMapView = async () => {
 	);
 
 	await view.when(() => {
-		const print = new Print({
+		print = new Print({
 			view: view,
-			// specify your own print service
+			visible: isPrintVisible.value,
 			printServiceUrl:
-				"https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+				"https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
 		});
 
-		// Add widget to the top right corner of the view
 		view.ui.add(print, "top-right");
 	});
 };
@@ -351,7 +360,7 @@ const resetAllFilters = () => {
 			layers.forEach(layer => {
 				if (layer.type === "group") {
 					layer.visible = true;
-					
+
 					if (layer.layers) {
 						layer.layers.items.forEach(sublayer => {
 							if (sublayer.type === "feature") {
@@ -360,16 +369,16 @@ const resetAllFilters = () => {
 							}
 						});
 					}
-				} 
+				}
 				else if (layer.type === "feature") {
 					layer.visible = true;
 					layer.definitionExpression = null; // Remove any definition expression
 				}
 			});
 		};
-		
+
 		resetLayers(webmap.layers.items);
-		
+
 	} catch (error) {
 		console.error("Error resetting filters:", error);
 	}
@@ -600,26 +609,34 @@ onMounted(async () => {
 				<!-- <div class="mb-3 flex items-center justify-between">
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                 </div> -->
-				<div ref="mapViewDiv" style="height: 94vh; width: 100%; position: relative; overflow: hidden;">
-					<div class="absolute bottom-[65px] right-[10px] flex flex-col gap-2">
-						<Button @click="resetAllFilters" icon="pi pi-filter-slash" rounded v-tooltip="'Reset layer filter'" />
-					</div>
-
-					<SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
-						style="position: absolute; bottom: 25px; right: 10px" />
-					<DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
-						<template #default="{ drawerTitle }">
-							<div v-if="drawerTitle === 'Layer'">
-								<Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
-									style="margin: 0; padding: 0" />
-							</div>
-							<div class="h-full" v-else-if="drawerTitle === 'Permit'">
-								<AuthACC @formSelected="handleFormSelected" />
-							</div>
-						</template>
-					</DrawerWebmap>
-					<DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm" @show-area="handleShowArea" />
-				</div>
+								<div class="flex justify-end">
+									<div ref="mapViewDiv" style="height: 94vh; width: 97%; position: relative; overflow: hidden;">
+										<div class="absolute bottom-[65px] right-[10px] flex flex-col gap-2">
+											<!-- Reset filter button -->
+											<Button @click="resetAllFilters" icon="pi pi-filter-slash" rounded v-tooltip="'Reset layer filter'" />
+											
+											<!-- Print button -->
+											<Button @click="hidePrint" icon="pi pi-print" rounded
+												v-tooltip="isPrintVisible ? 'Hide print widget' : 'Show print widget'" />
+										</div>
+					
+										<!-- Speed dial button(change view) -->
+										<SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
+											style="position: absolute; bottom: 25px; right: 10px" />
+										<DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
+											<template #default="{ drawerTitle }">
+												<div v-if="drawerTitle === 'Layer'">
+													<Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
+														style="margin: 0; padding: 0" />
+												</div>
+												<div class="h-full" v-else-if="drawerTitle === 'Permit'">
+													<AuthACC @formSelected="handleFormSelected" />
+												</div>
+											</template>
+										</DrawerWebmap>
+										<DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm" @show-area="handleShowArea" />
+									</div>
+								</div>
 			</div>
 		</div>
 	</div>
