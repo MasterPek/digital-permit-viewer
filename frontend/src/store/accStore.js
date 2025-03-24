@@ -35,32 +35,35 @@ export const useAccStore = defineStore("accStore", {
                 const { offset, limit } = this.pagination;
                 const res = await accForms(offset, limit);
 
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorData.detail);
-                }
-
-                const data = await res.json();
-
-                console.log('data', data)
-
-                if (isLoadMore) {
-                    this.forms.push(...data.data);
+                if (res.ok) {
+                    const data = await res.json();
+    
+                    console.log('data', data)
+    
+                    if (isLoadMore) {
+                        this.forms.push(...data.data);
+                    } else {
+                        this.forms = data.data;
+                    }
+    
+                    this.items = this.forms.map((form) => ({
+                        label: form.name,
+                        form: form,
+                        command: () => {
+                            this.setSelectedForm(form);
+                        },
+                    }));
+    
+                    // Update Pagination
+                    // this.pagination.offset += limit;
+                    this.pagination.totalResults = data.pagination.totalResults;
                 } else {
-                    this.forms = data.data;
+                    const errorData = await res.json();
+                    
+                    this.error = errorData.detail;
+                    // throw new Error(errorData.detail);
                 }
 
-                this.items = this.forms.map((form) => ({
-                    label: form.name,
-                    form: form,
-                    command: () => {
-                        this.setSelectedForm(form);
-                    },
-                }));
-
-                // Update Pagination
-                // this.pagination.offset += limit;
-                this.pagination.totalResults = data.pagination.totalResults;
             } catch (error) {
                 console.error("Error fetching forms:", error);
                 this.error = error.message

@@ -379,6 +379,11 @@ const resetAllFilters = () => {
 
 		resetLayers(webmap.layers.items);
 
+		// Remove formid from the URL
+		const newQuery = { ...route.query };
+		delete newQuery.formid;
+		router.replace({ query: newQuery });
+		
 	} catch (error) {
 		console.error("Error resetting filters:", error);
 	}
