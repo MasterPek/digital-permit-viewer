@@ -37,9 +37,9 @@
       <div v-if="loading" class="text-center">
         <i class="pi pi-spin pi-spinner"></i>
       </div>
-      <div v-if="error" class="text-red-500">
-            {{ error }}
-        </div>
+      <div v-if="error" class="text-red-500 text-center my-4">
+        {{ error }}
+      </div>
       <p v-if="noMoreItems" class="text-center text-gray-500 my-4">No more items to load</p>
     </div>
     <Popover ref="op">
@@ -214,13 +214,13 @@ const handleScroll = (event) => {
 
 const loadMoreItems = async () => {
   if (loading.value || accStore.pagination.offset >= accStore.pagination.totalResults) return;
-  
+
   loading.value = true;
-  
+
   try {
     await accStore.fetchForms(true);
     accStore.pagination.offset += accStore.pagination.limit;
-    
+
     fetchStatusOptions();
 
     if (accStore.pagination.offset >= accStore.pagination.totalResults) {
