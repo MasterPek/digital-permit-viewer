@@ -7,7 +7,6 @@
       <Avatar :label="avatarLabel" shape="circle" v-tooltip="`${avatarTooltip}`" />
     </div>
     <div class="mt-0 scroll-container" ref="scrollContainer" @scroll="handleScroll">
-      <!-- TODO: add error handler for user does not have permission for that project -->
       <PanelMenu :model="filteredMenuItems" style="margin: 0.5rem;">
         <template #item="{ item }">
           <a v-ripple class="flex items-center px-4 py-2 cursor-pointer group">
@@ -143,7 +142,6 @@ const fetchStatusOptions = () => {
 //   }
 // };
 
-// TODO: validation if item.label did not contain 'permit' it will go to next offset
 const filteredMenuItems = computed(() => {
   let filteredItems;
 
@@ -160,7 +158,7 @@ const filteredMenuItems = computed(() => {
   }
 
   // If no valid "permit" items are found, load more items
-  if (filteredItems.length === 0 && accStore.pagination.offset < accStore.pagination.totalResults) {
+  if (filteredItems.length < 0 && accStore.pagination.offset < accStore.pagination.totalResults) {
     loadMoreItems();
   }
 
@@ -302,6 +300,11 @@ onMounted(async () => {
   await accStore.fetchUsers();
   await avatar();
   await loadForms();
+
+  // Check if more items are needed immediately after loading
+  setTimeout(() => {
+    checkIfMoreItemsNeeded();
+  }, 500);
 });
 
 onUnmounted(() => {

@@ -72,42 +72,49 @@ const handleFormSelected = async (form) => {
 };
 
 const handleShowArea = async (formId) => {
-	// console.log('formId parameter:', formId);
+    if (!formId) return;
 
-	// Ensure formId is enclosed in {}
-	if (typeof formId === "string" && !formId.startsWith("{")) {
-		formId = `{${formId.replace(/{|}/g, "").toUpperCase()}}`; // Add {} if missing
-	}
+    // Decode URL-encoded values (e.g., %7B...%7D to {...})
+    formId = decodeURIComponent(formId);
 
-	if (formId && view) {
-		try {
-			// Wait for view to be ready
-			await view.when();
+    // Replace Unicode curly braces (｛｝) with normal curly braces ({})
+    formId = formId.replace(/｛/g, "{").replace(/｝/g, "}");
 
-			// Find the feature by formId first
-			const feature = await findFeatureByFormId(formId);
-			if (feature) {
-				// Set the selected feature and popup data
-				selectedFeature.value = feature;
-				popupData.value = {
-					attributes: feature.attributes,
-					layerName: feature.layer?.title,
-					title: feature.layer?.popupTemplate?.title,
-					content: feature.layer?.popupTemplate?.content
-				};
+    // Normalize formId to ensure it has curly braces
+    const uuidRegex = /[0-9a-fA-F-]{36}/;
+    const match = formId.match(uuidRegex);
+    
+    if (match) {
+        formId = `{${match[0].toUpperCase()}}`; // TODO: check perlu uppercase ke tidak
+    } else {
+        console.error("Invalid formId format:", formId);
+        return;
+    }
 
-				// Zoom to the feature
-				await zoomToFeature(formId);
+    if (view) {
+        try {
+            await view.when();
 
-				// Update the route with the formId only if it's different
-				if (formId !== route.query.formid) {
-					await router.push({ query: { ...route.query, formid: formId } });
-				}
-			}
-		} catch (error) {
-			console.error("Error handling show area:", error);
-		}
-	}
+            const feature = await findFeatureByFormId(formId);
+            if (feature) {
+                selectedFeature.value = feature;
+                popupData.value = {
+                    attributes: feature.attributes,
+                    layerName: feature.layer?.title,
+                    title: feature.layer?.popupTemplate?.title,
+                    content: feature.layer?.popupTemplate?.content
+                };
+
+                await zoomToFeature(formId);
+
+                if (formId !== route.query.formid) {
+                    await router.push({ query: { ...route.query, formid: formId } });
+                }
+            }
+        } catch (error) {
+            console.error("Error handling show area:", error);
+        }
+    }
 };
 
 const findFeatureByFormId = async (formId) => {
