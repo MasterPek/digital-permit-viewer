@@ -29,44 +29,46 @@ export const useAccStore = defineStore("accStore", {
         async fetchForms(isLoadMore = false) {
             if (this.loading) return;
             this.loading = true;
-            this.error = null
-
+            this.error = null;
+        
             try {
                 const { offset, limit } = this.pagination;
                 const res = await accForms(offset, limit);
-
+        
                 if (res.ok) {
                     const data = await res.json();
-    
-                    console.log('data', data)
-    
-                    if (isLoadMore) {
-                        this.forms.push(...data.data);
-                    } else {
-                        this.forms = data.data;
+                    
+                    // Clear forms if not loading more
+                    if (!isLoadMore) {
+                        this.forms = [];
+                        this.items = [];
                     }
-    
-                    this.items = this.forms.map((form) => ({
+        
+                    // Process new forms
+                    const newForms = data.data || [];
+                    this.forms.push(...newForms);
+                    
+                    // Map new forms to items
+                    const newItems = newForms.map((form) => ({
                         label: form.name,
                         form: form,
                         command: () => {
                             this.setSelectedForm(form);
                         },
                     }));
-    
-                    // Update Pagination
-                    // this.pagination.offset += limit;
+                    
+                    this.items.push(...newItems);
                     this.pagination.totalResults = data.pagination.totalResults;
+                    
+                    // Only update offset on successful load
+                    this.pagination.offset += limit;
                 } else {
                     const errorData = await res.json();
-                    
                     this.error = errorData.detail;
-                    // throw new Error(errorData.detail);
                 }
-
             } catch (error) {
                 console.error("Error fetching forms:", error);
-                this.error = error.message
+                this.error = error.message;
             } finally {
                 this.loading = false;
             }

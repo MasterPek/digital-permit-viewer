@@ -143,27 +143,67 @@ const fetchStatusOptions = () => {
 // };
 
 const filteredMenuItems = computed(() => {
-  let filteredItems;
-
-  if (!selectedStatus.value) {
-    filteredItems = menuItems.value.filter((item) => item.label.toLowerCase().includes("permit"));
-  } else {
-    filteredItems = menuItems.value.filter((item) => {
-      return (
-        item.approvalStatus === selectedStatus.value &&
-        item.label.toLowerCase().includes("permit") &&
-        item.form
+  console.log("Total menu items:", menuItems.value.length);
+  
+  let filteredItems = menuItems.value.filter((item) => {
+    const isPermit = item.label.toLowerCase().includes("permit");
+    const hasApprovalStatus = item.form?.customValues?.some(
+      field => field.itemLabel?.toLowerCase() === 'approval status' && field.valueName === 'choiceVal'
+    );
+    
+    if (selectedStatus.value) {
+      if (!hasApprovalStatus) return false;
+      const statusField = item.form.customValues.find(
+        field => field.itemLabel?.toLowerCase() === 'approval status' && field.valueName === 'choiceVal'
       );
-    });
-  }
+      return isPermit && statusField.choiceVal === selectedStatus.value;
+    }
+    
+    // WORKAROUND: remove hasApprovalStatus if received form template acc
+    return isPermit && hasApprovalStatus;
+  });
 
-  // If no valid "permit" items are found, load more items
-  if (filteredItems.length < 0 && accStore.pagination.offset < accStore.pagination.totalResults) {
-    loadMoreItems();
-  }
-
+  console.log("Filtered items count:", filteredItems.length);
   return filteredItems;
 });
+
+// New computed property to track if we should load more
+const shouldLoadMore = computed(() => {
+  return (
+    !loading.value &&
+    accStore.pagination.offset < accStore.pagination.totalResults &&
+    (filteredMenuItems.value.length < 10 || accStore.items.length === filteredMenuItems.value.length)
+  );
+});
+
+const handleScroll = (event) => {
+  const container = event.target;
+  const bottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 20;
+
+  if (bottom && shouldLoadMore.value) {
+    loadMoreItems();
+  } else if (accStore.pagination.offset >= accStore.pagination.totalResults) {
+    noMoreItems.value = true;
+  }
+};
+
+// Modified loadMoreItems to ensure it continues loading
+const loadMoreItems = async () => {
+  if (!shouldLoadMore.value) return;
+
+  loading.value = true;
+  try {
+    await accStore.fetchForms(true); // true indicates load more
+    
+    // If we still don't have enough filtered items, load more
+    if (filteredMenuItems.value.length < 10 && 
+        accStore.pagination.offset < accStore.pagination.totalResults) {
+      setTimeout(loadMoreItems, 300);
+    }
+  } finally {
+    loading.value = false;
+  }
+};
 
 // Computed menu items with enriched Approval Status
 const menuItems = computed(() => {
@@ -198,36 +238,36 @@ const checkIfMoreItemsNeeded = () => {
     }
   }
 };
+// WORKAROUND: when template form acc received, this need to uncomment
+// const handleScroll = (event) => {
+//   const container = event.target;
+//   const bottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 20;
 
-const handleScroll = (event) => {
-  const container = event.target;
-  const bottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 20;
+//   if (bottom && !loading.value && accStore.pagination.offset < accStore.pagination.totalResults) {
+//     loadMoreItems();
+//   } else if (accStore.pagination.offset >= accStore.pagination.totalResults) {
+//     noMoreItems.value = true;
+//   }
+// };
 
-  if (bottom && !loading.value && accStore.pagination.offset < accStore.pagination.totalResults) {
-    loadMoreItems();
-  } else if (accStore.pagination.offset >= accStore.pagination.totalResults) {
-    noMoreItems.value = true;
-  }
-};
+// const loadMoreItems = async () => {
+//   if (loading.value || accStore.pagination.offset >= accStore.pagination.totalResults) return;
 
-const loadMoreItems = async () => {
-  if (loading.value || accStore.pagination.offset >= accStore.pagination.totalResults) return;
+//   loading.value = true;
 
-  loading.value = true;
+//   try {
+//     await accStore.fetchForms(true);
+//     accStore.pagination.offset += accStore.pagination.limit;
 
-  try {
-    await accStore.fetchForms(true);
-    accStore.pagination.offset += accStore.pagination.limit;
+//     fetchStatusOptions();
 
-    fetchStatusOptions();
-
-    if (accStore.pagination.offset >= accStore.pagination.totalResults) {
-      noMoreItems.value = true;
-    }
-  } finally {
-    loading.value = false;
-  }
-};
+//     if (accStore.pagination.offset >= accStore.pagination.totalResults) {
+//       noMoreItems.value = true;
+//     }
+//   } finally {
+//     loading.value = false;
+//   }
+// };
 
 const statusClass = (status, type = 'class') => {
   const statusMap = {
@@ -288,9 +328,17 @@ const avatar = async () => {
 const loadForms = async () => {
   loading.value = true;
   try {
-    await accStore.fetchForms();
+    // Reset pagination when loading fresh
+    accStore.pagination.offset = 0;
+    await accStore.fetchForms(); // false indicates initial load
     fetchStatusOptions();
     error.value = accStore.error;
+    
+    // Initial check for more items
+    if (filteredMenuItems.value.length < 10 && 
+        accStore.pagination.offset < accStore.pagination.totalResults) {
+      loadMoreItems();
+    }
   } finally {
     loading.value = false;
   }
@@ -305,6 +353,9 @@ onMounted(async () => {
   setTimeout(() => {
     checkIfMoreItemsNeeded();
   }, 500);
+
+  console.log('sad', filteredMenuItems.value);
+  console.log('sad2', menuItems.value);
 });
 
 onUnmounted(() => {

@@ -4,6 +4,7 @@ import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import esriConfig from "@arcgis/core/config";
 import Print from "@arcgis/core/widgets/Print";
+import Legend from "@arcgis/core/widgets/Legend";
 import { useToast } from "primevue/usetoast";
 import { imageryMap, streetMap } from "@/utils/basemap";
 import { useBasemapStore } from "@/store/basemapStore";
@@ -26,7 +27,8 @@ const mapViewDiv = ref(null);
 
 let view;
 let webmap;
-let print; // Define print widget globally
+let print;
+let legend;
 
 
 const treeNodes = ref([]);
@@ -41,6 +43,7 @@ const popupData = ref(null);
 const selectedFeature = ref(null);
 
 const isPrintVisible = ref(false);
+const isLegendVisible = ref(false)
 
 // const countries = CountryService.getData();
 
@@ -51,13 +54,24 @@ const isPrintVisible = ref(false);
 //     const country = countries.find((c) => c.code === countryCode.value);
 //     return country ? country.name : "Unknown";
 // });
-const hidePrint = () => {
-    isPrintVisible.value = !isPrintVisible.value;
+const hideLegend = () => {
+	if (!isLegendVisible.value) {
+		// If legend is about to be shown, hide the print widget
+		isPrintVisible.value = false;
+		if (print) print.visible = false;
+	}
+	isLegendVisible.value = !isLegendVisible.value;
+	if (legend) legend.visible = isLegendVisible.value;
+};
 
-    // Toggle the visible property of the print widget
-    if (print) {
-        print.visible = isPrintVisible.value;
-    }
+const hidePrint = () => {
+	if (!isPrintVisible.value) {
+		// If print is about to be shown, hide the legend widget
+		isLegendVisible.value = false;
+		if (legend) legend.visible = false;
+	}
+	isPrintVisible.value = !isPrintVisible.value;
+	if (print) print.visible = isPrintVisible.value;
 };
 
 const handleCloseDrawers = () => {
@@ -72,49 +86,49 @@ const handleFormSelected = async (form) => {
 };
 
 const handleShowArea = async (formId) => {
-    if (!formId) return;
+	if (!formId) return;
 
-    // Decode URL-encoded values (e.g., %7B...%7D to {...})
-    formId = decodeURIComponent(formId);
+	// Decode URL-encoded values (e.g., %7B...%7D to {...})
+	formId = decodeURIComponent(formId);
 
-    // Replace Unicode curly braces (｛｝) with normal curly braces ({})
-    formId = formId.replace(/｛/g, "{").replace(/｝/g, "}");
+	// Replace Unicode curly braces (｛｝) with normal curly braces ({})
+	formId = formId.replace(/｛/g, "{").replace(/｝/g, "}");
 
-    // Normalize formId to ensure it has curly braces
-    const uuidRegex = /[0-9a-fA-F-]{36}/;
-    const match = formId.match(uuidRegex);
-    
-    if (match) {
-        formId = `{${match[0].toUpperCase()}}`; // TODO: check perlu uppercase ke tidak
-    } else {
-        console.error("Invalid formId format:", formId);
-        return;
-    }
+	// Normalize formId to ensure it has curly braces
+	const uuidRegex = /[0-9a-fA-F-]{36}/;
+	const match = formId.match(uuidRegex);
 
-    if (view) {
-        try {
-            await view.when();
+	if (match) {
+		formId = `{${match[0].toUpperCase()}}`; // TODO: check perlu uppercase ke tidak
+	} else {
+		console.error("Invalid formId format:", formId);
+		return;
+	}
 
-            const feature = await findFeatureByFormId(formId);
-            if (feature) {
-                selectedFeature.value = feature;
-                popupData.value = {
-                    attributes: feature.attributes,
-                    layerName: feature.layer?.title,
-                    title: feature.layer?.popupTemplate?.title,
-                    content: feature.layer?.popupTemplate?.content
-                };
+	if (view) {
+		try {
+			await view.when();
 
-                await zoomToFeature(formId);
+			const feature = await findFeatureByFormId(formId);
+			if (feature) {
+				selectedFeature.value = feature;
+				popupData.value = {
+					attributes: feature.attributes,
+					layerName: feature.layer?.title,
+					title: feature.layer?.popupTemplate?.title,
+					content: feature.layer?.popupTemplate?.content
+				};
 
-                if (formId !== route.query.formid) {
-                    await router.push({ query: { ...route.query, formid: formId } });
-                }
-            }
-        } catch (error) {
-            console.error("Error handling show area:", error);
-        }
-    }
+				await zoomToFeature(formId);
+
+				if (formId !== route.query.formid) {
+					await router.push({ query: { ...route.query, formid: formId } });
+				}
+			}
+		} catch (error) {
+			console.error("Error handling show area:", error);
+		}
+	}
 };
 
 const findFeatureByFormId = async (formId) => {
@@ -304,9 +318,9 @@ const initializeMapView = async () => {
 		map: webmap,
 	});
 
-	view.on("drag", () => (mapViewDiv.value.style.cursor = "grabbing"));
-	view.on("drag-end", () => (mapViewDiv.value.style.cursor = "default"));
-	view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "default"));
+	// view.on("drag", () => (mapViewDiv.value.style.cursor = "grabbing"));
+	// view.on("drag-end", () => (mapViewDiv.value.style.cursor = "default"));
+	// view.on("pointer-move", () => (mapViewDiv.value.style.cursor = "default"));
 
 	view.on("click", async (event) => {
 		const response = await view.hitTest(event);
@@ -357,6 +371,20 @@ const initializeMapView = async () => {
 				"https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
 		});
 
+		const featureLayer = webmap.layers.getItemAt(0);
+
+		legend = new Legend({
+			view: view,
+			layerInfos: [
+				{
+					layer: featureLayer,
+				}
+			],
+			visible: isLegendVisible.value,
+			hideLayersNotInCurrentView: true
+		});
+
+		view.ui.add(legend, "top-right");
 		view.ui.add(print, "top-right");
 	});
 };
@@ -390,7 +418,7 @@ const resetAllFilters = () => {
 		const newQuery = { ...route.query };
 		delete newQuery.formid;
 		router.replace({ query: newQuery });
-		
+
 	} catch (error) {
 		console.error("Error resetting filters:", error);
 	}
@@ -621,34 +649,38 @@ onMounted(async () => {
 				<!-- <div class="mb-3 flex items-center justify-between">
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                 </div> -->
-								<div class="flex justify-end">
-									<div ref="mapViewDiv" style="height: 94vh; width: 97%; position: relative; overflow: hidden;">
-										<div class="absolute bottom-[65px] right-[10px] flex flex-col gap-2">
-											<!-- Reset filter button -->
-											<Button @click="resetAllFilters" icon="pi pi-filter-slash" rounded v-tooltip="'Reset layer filter'" />
-											
-											<!-- Print button -->
-											<Button @click="hidePrint" icon="pi pi-print" rounded
-												v-tooltip="isPrintVisible ? 'Hide print widget' : 'Show print widget'" />
-										</div>
-					
-										<!-- Speed dial button(change view) -->
-										<SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
-											style="position: absolute; bottom: 25px; right: 10px" />
-										<DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
-											<template #default="{ drawerTitle }">
-												<div v-if="drawerTitle === 'Layer'">
-													<Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
-														style="margin: 0; padding: 0" />
-												</div>
-												<div class="h-full" v-else-if="drawerTitle === 'Permit'">
-													<AuthACC @formSelected="handleFormSelected" />
-												</div>
-											</template>
-										</DrawerWebmap>
-										<DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm" @show-area="handleShowArea" />
-									</div>
+				<div class="flex justify-end">
+					<div ref="mapViewDiv" style="height: 94vh; width: 97%; position: relative; overflow: hidden;">
+						<div class="absolute bottom-[65px] right-[10px] flex flex-col gap-2">
+							<!-- Reset filter button -->
+							<Button @click="resetAllFilters" icon="pi pi-filter-slash" rounded v-tooltip="'Reset layer filter'" />
+
+							<!-- Print button -->
+							<Button @click="hidePrint" icon="pi pi-print" rounded
+								v-tooltip="isPrintVisible ? 'Hide print widget' : 'Show print widget'" />
+							
+							<!-- Legend button -->
+							<Button @click="hideLegend" icon="pi pi-list" rounded
+								v-tooltip="isLegendVisible ? 'Hide legend widget' : 'Show legend widget'" />
+						</div>
+
+						<!-- Speed dial button(change view) -->
+						<SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
+							style="position: absolute; bottom: 25px; right: 10px" />
+						<DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
+							<template #default="{ drawerTitle }">
+								<div v-if="drawerTitle === 'Layer'">
+									<Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
+										style="margin: 0; padding: 0" />
 								</div>
+								<div class="h-full" v-else-if="drawerTitle === 'Permit'">
+									<AuthACC @formSelected="handleFormSelected" />
+								</div>
+							</template>
+						</DrawerWebmap>
+						<DrawerWebmapRight v-model="isRightDrawerOpen" :selectedForm="selectedForm" @show-area="handleShowArea" />
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
