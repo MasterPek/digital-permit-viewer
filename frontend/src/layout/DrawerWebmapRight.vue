@@ -42,12 +42,12 @@
                 <h3 class="font-medium text-xl">Permit Time</h3>
                 <div class="flex gap-3">
                   <div class="flex flex-col">
-                    <label class="font-medium">Actual Start</label>
+                    <label class="font-medium">Start Date</label>
                     <DatePicker v-model="actualStart" dateFormat="dd/mm/yy"
                       :placeholder="actualStart ? undefined : 'Date were not set'" disabled />
                   </div>
                   <div class="flex flex-col">
-                    <label class="font-medium">Actual Finish</label>
+                    <label class="font-medium">End Date</label>
                     <DatePicker v-model="actualFinish" dateFormat="dd/mm/yy"
                       :placeholder="actualFinish ? undefined : 'Date were not set'" disabled />
                   </div>
@@ -92,7 +92,7 @@
                       <div v-if="tab.type === 'generate'">
                         <div class="flex justify-end mb-2">
                           <!-- Question icon button -->
-                          <Button @click="openQuestion = true" severity="info" icon="pi pi-question" size="small" text
+                          <Button @click="openQuestion" severity="info" icon="pi pi-question" size="small" text
                             v-tooltip="'Click to show steps'" />
                         </div>
 
@@ -100,33 +100,6 @@
                         <FileUpload @files-selected="handleFileUpload" @upload-clicked="handleGeneratePdf" multiple
                           :maxFiles="2" :supportedFiles="'PDF'" :maxFileSize="10" uploadLabelBtn="Generate"
                           :loading="loading" />
-
-
-                        <!-- Modal -->
-                        <Dialog v-model:visible="openQuestion" modal header="Steps to generate Form with permit area"
-                          :style="{ width: '45rem' }">
-                          <div class="flex flex-col gap-4">
-                            <Panel header="Step 1" toggleable>
-                              <span class="m-0">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                incididunt ut
-                                labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-                                ullamco
-                                laboris nisi ut aliquip ex ea commodo consequat.
-                                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-                                nulla
-                                pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
-                                deserunt
-                                mollit anim id est laborum.
-                              </span>
-                            </Panel>
-                            <Panel header="Step 2" toggleable>
-                              <p class="m-0">
-                                <img src="/demo/images/gamuda.png" />
-                              </p>
-                            </Panel>
-                          </div>
-                        </Dialog>
                       </div>
 
                       <!-- <img v-if="tab.type === 'image'" :src="tab.content" class="w-48" /> -->
@@ -174,7 +147,6 @@ const { fetchTemplates } = accTemplateStore;
 const toast = useToast()
 const selectedTemplate = ref(null);
 
-const openQuestion = ref(false);
 const loading = ref(false);
 
 const selectedFile = ref([]);
@@ -192,6 +164,11 @@ const toggleAccordion = (value) => {
   activePanel.value = activePanel.value === value ? null : value;
 };
 
+function openQuestion() {
+  window.open(import.meta.env.VITE_SHAREPOINT_USER_GUIDE, '_blank');
+}
+
+
 // Fetch templates when in "Add Permit" mode
 // watch(
 //   () => props.isAddPermitMode,
@@ -208,11 +185,11 @@ const approvalStatus = computed(() => {
   const statusField = props.selectedForm.customValues.find(
     (field) =>
       field.itemLabel &&
-      field.itemLabel.toLowerCase() === "approval status" &&
-      field.valueName === "choiceVal"
+      field.itemLabel === "[_status] [Pending,Pending,Pending,Approval,Revocation,_,_]" &&
+      field.valueName === "textVal"
   );
 
-  return statusField ? statusField.choiceVal : null;
+  return statusField ? statusField.textVal : null;
 });
 
 function formatDateToDDMMYY(dateStr) {
@@ -230,7 +207,7 @@ const actualStart = computed(() => {
   const statusField = props.selectedForm.customValues.find(
     (field) =>
       field.itemLabel &&
-      field.itemLabel.toLowerCase() === "actual start" &&
+      field.itemLabel.toLowerCase() === "start date" &&
       field.valueName === "dateVal"
   );
 
@@ -243,7 +220,7 @@ const actualFinish = computed(() => {
   const statusField = props.selectedForm.customValues.find(
     (field) =>
       field.itemLabel &&
-      field.itemLabel.toLowerCase() === "actual finish" &&
+      field.itemLabel.toLowerCase() === "end date" &&
       field.valueName === "dateVal"
   );
 
@@ -253,11 +230,11 @@ const actualFinish = computed(() => {
 
 const statusClass = computed(() => {
   switch (approvalStatus.value) {
-    case 'Approved':
+    case 'Approval':
       return 'text-green-600 font-bold'; // Green for Approved
     case 'Pending':
       return 'text-yellow-600 font-bold'; // Yellow for Pending
-    case 'Rejected':
+    case 'Revocation':
       return 'text-red-600 font-bold'; // Red for Rejected
     case 'On Hold':
       return 'text-blue-600 font-bold'; // Blue for On Hold

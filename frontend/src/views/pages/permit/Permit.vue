@@ -78,7 +78,7 @@ const avatarTooltip = ref('');
 
 const op = ref();
 const selectedStatus = ref(null);
-const statusOptions = ref([]);
+const statusOptions = ref(['Approval', 'Revocation', 'Pending']); 
 
 const toggle = (event) => {
   op.value.toggle(event);
@@ -99,7 +99,6 @@ const clearFilters = async () => {
   loading.value = true;
   try {
     await accStore.fetchForms();
-    fetchStatusOptions();
   } finally {
     loading.value = false;
   }
@@ -111,19 +110,19 @@ const selectStatus = (status) => {
   op.value.hide();
 };
 
-const fetchStatusOptions = () => {
-  let allCustomValues = accStore.items.flatMap(item => item.form?.customValues || []);
+// const fetchStatusOptions = () => {
+//   let allCustomValues = accStore.items.flatMap(item => item.form?.customValues || []);
 
-  const statusField = allCustomValues.find(
-    (field) =>
-      field.itemLabel?.toLowerCase() === 'approval status' &&
-      field.valueName === 'choiceVal'
-  );
+//   const statusField = allCustomValues.find(
+//     (field) =>
+//       field.itemLabel === '[_status] [Pending,Pending,Pending,Approval,Revocation,_,_]' &&
+//       field.valueName === 'textVal'
+//   );
 
-  if (statusField?.valueOptions) {
-    statusOptions.value = statusField.valueOptions;
-  }
-};
+//   if (statusField?.valueOptions) {
+//     statusOptions.value = statusField.valueOptions; // FIXME: valueOptions cannot be detected due to using textVal not choiceVal
+//   }
+// };
 
 // const fetchStatusOptions = () => {
 //   if (accStore.items.length > 0 && accStore.items[0].form?.customValues) {
@@ -131,8 +130,8 @@ const fetchStatusOptions = () => {
 
 //     const statusField = accStore.items[0].form.customValues.find(
 //       (field) =>
-//         field.itemLabel?.toLowerCase() === 'approval status' &&
-//         field.valueName === 'choiceVal'
+//         field.itemLabel?.toLowerCase() === '[_status] [Pending,Pending,Pending,Approval,Revocation,_,_]' &&
+//         field.valueName === 'textVal'
 //     );
 
 //     if (statusField?.valueOptions) {
@@ -148,22 +147,21 @@ const filteredMenuItems = computed(() => {
   let filteredItems = menuItems.value.filter((item) => {
     const isPermit = item.label.toLowerCase().includes("permit");
     const hasApprovalStatus = item.form?.customValues?.some(
-      field => field.itemLabel?.toLowerCase() === 'approval status' && field.valueName === 'choiceVal'
+      field => field.itemLabel === '[_status] [Pending,Pending,Pending,Approval,Revocation,_,_]' && field.valueName === 'textVal'
     );
     
     if (selectedStatus.value) {
       if (!hasApprovalStatus) return false;
       const statusField = item.form.customValues.find(
-        field => field.itemLabel?.toLowerCase() === 'approval status' && field.valueName === 'choiceVal'
+        field => field.itemLabel === '[_status] [Pending,Pending,Pending,Approval,Revocation,_,_]' && field.valueName === 'textVal'
       );
-      return isPermit && statusField.choiceVal === selectedStatus.value;
+      return isPermit && statusField.textVal === selectedStatus.value;
     }
     
     // WORKAROUND: remove hasApprovalStatus if received form template acc
     return isPermit && hasApprovalStatus;
   });
 
-  console.log("Filtered items count:", filteredItems.length);
   return filteredItems;
 });
 
@@ -212,12 +210,12 @@ const menuItems = computed(() => {
       const statusField = item.form.customValues.find(
         (field) =>
           field.itemLabel &&
-          field.itemLabel.toLowerCase() === 'approval status' &&
-          field.valueName === 'choiceVal'
+          field.itemLabel === '[_status] [Pending,Pending,Pending,Approval,Revocation,_,_]' &&
+          field.valueName === 'textVal'
       );
       return {
         ...item,
-        approvalStatus: statusField ? statusField.choiceVal : null,
+        approvalStatus: statusField ? statusField.textVal : null,
       };
     }
     return { ...item, approvalStatus: null };
@@ -271,9 +269,9 @@ const checkIfMoreItemsNeeded = () => {
 
 const statusClass = (status, type = 'class') => {
   const statusMap = {
-    Approved: { class: 'text-green-600', severity: 'success' },
+    Approval: { class: 'text-green-600', severity: 'success' },
     Pending: { class: 'text-yellow-600', severity: 'warn' },
-    Rejected: { class: 'text-red-600', severity: 'danger' },
+    Revocation: { class: 'text-red-600', severity: 'danger' },
     'On Hold': { class: 'text-blue-600', severity: 'info' },
     'In Review': { class: 'text-blue-600', severity: 'info' },
     'Needs Revision': { class: 'text-blue-600', severity: 'info' },
@@ -305,13 +303,13 @@ watch(
 );
 
 // Watch for new items to update filter options
-watch(
-  () => accStore.items,
-  () => {
-    fetchStatusOptions();
-  },
-  { deep: true, immediate: true }
-);
+// watch(
+//   () => accStore.items,
+//   () => {
+//     fetchStatusOptions();
+//   },
+//   { deep: true, immediate: true }
+// );
 
 const avatar = async () => {
   try {
@@ -353,9 +351,6 @@ onMounted(async () => {
   setTimeout(() => {
     checkIfMoreItemsNeeded();
   }, 500);
-
-  console.log('sad', filteredMenuItems.value);
-  console.log('sad2', menuItems.value);
 });
 
 onUnmounted(() => {

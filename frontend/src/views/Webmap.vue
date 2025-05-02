@@ -346,7 +346,7 @@ const initializeMapView = async () => {
 				await zoomToFeature(formId);
 			}
 
-			console.log('webmap', webmap.layers.items);
+			console.log('webmap', features);
 			console.log('popupData.value', popupData.value);
 		}
 	});
@@ -381,7 +381,7 @@ const initializeMapView = async () => {
 				}
 			],
 			visible: isLegendVisible.value,
-			hideLayersNotInCurrentView: true
+			hideLayersNotInCurrentView: false
 		});
 
 		view.ui.add(legend, "top-right");
@@ -609,11 +609,11 @@ const speedDialItems = ref([
 		label: "Imagery View",
 		icon: "pi pi-image",
 		command: () => {
-			basemapStore.setBasemap("world-imagery");
+			basemapStore.setBasemap("hybrid");
 			toast.add({
 				severity: "info",
 				summary: "View Changed",
-				detail: "Imagery View Selected",
+				detail: "Imagery Hybrid View Selected",
 				life: 3000,
 			});
 		},
@@ -637,6 +637,8 @@ onMounted(async () => {
 
 			// Zoom to the feature
 			await zoomToFeature(route.query.formid);
+
+			console.log('popup', popupData.value);
 		}
 	}
 });
