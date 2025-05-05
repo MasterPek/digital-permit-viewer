@@ -13,7 +13,7 @@ import { defineStore } from "pinia";
 
 export const useBasemapStore = defineStore("basemap", {
   state: () => ({
-    currentBasemapId: "hybrid", // Default basemap ID
+    currentBasemapId: "satellite", // Default basemap ID
   }),
   actions: {
     setBasemap(id) {

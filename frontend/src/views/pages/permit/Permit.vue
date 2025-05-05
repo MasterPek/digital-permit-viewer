@@ -329,7 +329,7 @@ const loadForms = async () => {
     // Reset pagination when loading fresh
     accStore.pagination.offset = 0;
     await accStore.fetchForms(); // false indicates initial load
-    fetchStatusOptions();
+    // fetchStatusOptions();
     error.value = accStore.error;
     
     // Initial check for more items
