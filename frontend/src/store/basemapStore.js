@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 
 // NOTE: Options to change default basemap
 // world-imagery
+// hybrid
 // osm
 // street
 // satellite

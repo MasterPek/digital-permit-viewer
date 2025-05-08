@@ -45,6 +45,8 @@ const selectedFeature = ref(null);
 const isPrintVisible = ref(false);
 const isLegendVisible = ref(false)
 
+const loadingZoom = ref(false);
+
 // const countries = CountryService.getData();
 
 // const countryCode = computed(() =>
@@ -88,6 +90,8 @@ const handleFormSelected = async (form) => {
 const handleShowArea = async (formId) => {
 	if (!formId) return;
 
+	loadingZoom.value = true
+
 	// Decode URL-encoded values (e.g., %7B...%7D to {...})
 	formId = decodeURIComponent(formId);
 
@@ -99,9 +103,10 @@ const handleShowArea = async (formId) => {
 	const match = formId.match(uuidRegex);
 
 	if (match) {
-		formId = `{${match[0].toUpperCase()}}`; // TODO: check perlu uppercase ke tidak
+		formId = `{${match[0].toUpperCase()}}`;
 	} else {
 		console.error("Invalid formId format:", formId);
+		loadingZoom.value = false
 		return;
 	}
 
@@ -127,6 +132,8 @@ const handleShowArea = async (formId) => {
 			}
 		} catch (error) {
 			console.error("Error handling show area:", error);
+		} finally {
+			loadingZoom.value = false;
 		}
 	}
 };
@@ -134,6 +141,7 @@ const handleShowArea = async (formId) => {
 const findFeatureByFormId = async (formId) => {
 	if (!webmap || !formId) {
 		console.warn('webmap or formId is missing.');
+		loadingZoom.value = false
 		return null;
 	}
 
@@ -238,7 +246,7 @@ const zoomToFeature = async (formId) => {
 					left: 50
 				},
 			}, {
-				duration: 1000  // Animation duration in milliseconds
+				duration: 500  // Animation duration in milliseconds
 			});
 		}
 
@@ -652,7 +660,7 @@ onMounted(async () => {
                     <h1 class="text-2xl font-semibold">{{ countryName }}</h1>
                 </div> -->
 				<div class="flex justify-end">
-					<div ref="mapViewDiv" style="height: 94vh; width: 97%; position: relative; overflow: hidden;">
+					<div ref="mapViewDiv" style="height: 94vh; width: 100%; position: relative; overflow: hidden;">
 						<div class="absolute bottom-[65px] right-[10px] flex flex-col gap-2">
 							<!-- Reset filter button -->
 							<Button @click="resetAllFilters" icon="pi pi-filter-slash" rounded v-tooltip="'Reset layer filter'" />
@@ -660,7 +668,7 @@ onMounted(async () => {
 							<!-- Print button -->
 							<Button @click="hidePrint" icon="pi pi-print" rounded
 								v-tooltip="isPrintVisible ? 'Hide print widget' : 'Show print widget'" />
-							
+
 							<!-- Legend button -->
 							<Button @click="hideLegend" icon="pi pi-list" rounded
 								v-tooltip="isLegendVisible ? 'Hide legend widget' : 'Show legend widget'" />
@@ -669,7 +677,10 @@ onMounted(async () => {
 						<!-- Speed dial button(change view) -->
 						<SpeedDial :model="speedDialItems" direction="left" :tooltipOptions="{ position: 'bottom' }"
 							style="position: absolute; bottom: 25px; right: 10px" />
-						<DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers">
+						<div v-if="loadingZoom" class="flex items-center justify-center h-full w-full absolute top-0 left-0 bg-black bg-opacity-50">
+							<ProgressSpinner />
+						</div>
+						<DrawerWebmap v-model="isDrawerOpen" @close-drawers="handleCloseDrawers" style="position: absolute;">
 							<template #default="{ drawerTitle }">
 								<div v-if="drawerTitle === 'Layer'">
 									<Tree v-model:selectionKeys="selectedNodes" :value="treeNodes" selectionMode="checkbox"
